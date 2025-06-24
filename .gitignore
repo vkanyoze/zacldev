@@ -1,0 +1,17 @@
+.env
+.htaccess
+.user.ini
+node_modules/
+payments.crt
+payments.key
+payments.zacl.co.zm.crt
+payments.zacl.co.zm.csr
+payments.zacl.co.zm.key
+updates/
+vendor/
+zacl/
+app/Log/
+
+.git.zip
+core.45765
+backup.zip

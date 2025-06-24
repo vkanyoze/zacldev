@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@layer base {
+  @font-face {
+    font-family: Circular;
+    font-weight: 400;
+    src: url(/fonts/CircularSpotifyText-Light.ttf) format("tff");
+  }
+  @font-face {
+    font-family: Circular;
+    font-weight: 500;
+    src: url(/fonts/lineto-circular-book.ttf) format("ttf");
+  }
+  @font-face {
+    font-family: Circular;
+    font-weight: 700;
+    src: url(/fonts/lineto-circular-bold.ttf) format("ttf");
+  }
+}
+@tailwind utilities;

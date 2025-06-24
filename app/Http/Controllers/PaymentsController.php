@@ -1,0 +1,292 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Card;
+use App\Models\Payment;
+use App\Models\Webhook;
+use App\Services\CyberSourcePaymentService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
+use Barryvdh\DomPDF\Facade\Pdf;
+use TNkemdilim\MoneyToWords\Converter;
+use Illuminate\Support\Str;
+
+class PaymentsController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        $payments = Payment::where('user_id', Auth::id())->orderBy('created_at', 'desc')->paginate(4);
+        $title = 'Payments';
+        return view('payments.indexes', compact('payments', 'title'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        $title = 'Add new payment';
+        return view('payments.posts', compact('title'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function select(Request $request)
+    {
+        $request->validate([
+            'invoice_reference' => 'required',
+            'amount_spend' => 'required',
+            'currency' => ['required', Rule::in(['USD', 'ZAR', 'ZMW'])],
+            'service_type' => Rule::requiredIf(function () use ($request) {
+                    return empty($request->service_type_1) && empty($request->service_type_2);
+            }),
+        ]);
+
+        $serviceType = $request->input('service_type');
+        $otherFields = array_filter($request->only(['service_type_1', 'service_type_2']));
+        $serviceTypes = array_merge([$serviceType], $otherFields);
+        $serviceTypes = array_filter($serviceTypes);
+        $serviceTypesString = implode(', ', $serviceTypes);
+        $stepOne = $request->all();
+        $stepOne['service_type'] = $serviceTypesString;
+        $request->session()->put('step_one', $stepOne);
+
+        $title = 'select payment';
+        $countries = COUNTRIES;
+        return view('payments.cards', compact('title', 'stepOne', 'countries'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function process(Request $request)
+    {
+        $formData = $request->session()->get('step_one');
+        $amountSpend = $formData['amount_spend'];
+        $formData = $request->session()->get('step_two');
+        $fullName = $formData['full_name'];
+        $address = $formData['address'];
+        $city = $formData['city'];
+        $postalCode = $formData['postal_code'];
+        $country = $formData['country'];
+        $email = $formData['email_address'];
+        $phonenumber = $formData['phone_number'];
+        $cardNumber = $formData['card_number'];
+        $expiryDate = $formData['expiry_date'];
+        $cvv = $formData['cvv'];
+        $paymentService = new CyberSourcePaymentService($fullName, $address, $city, $postalCode, $country, $email, $phonenumber,$cardNumber,$cvv, $expiryDate, $amountSpend);
+        $results = $paymentService->createPayment();
+
+        if ($results['status'] === 'ERROR'){
+           return redirect()->route('payments.index')->with("error", $results['message']);
+        }
+
+        $sam = $request->session()->get('step_two');
+        $sam['name'] = explode(' ',$sam['full_name'])[0];
+        $sam['surname'] = explode(' ',$sam['full_name'])[1];
+        $sam['state'] = ' ';
+        $sam['user_id'] = auth()->user()->id;
+
+        $card = Card::create($sam);
+        $formData = $request->session()->get('step_one');
+        $formData['transaction_reference'] = $results['processorInformation']['transactionId'];
+        $formData['reconciliaton_reference'] = $results['reconciliationId'];
+        $formData['status'] = $results['status'];
+        $formData['user_id'] = auth()->user()->id;
+        $formData['card_id'] = $card->id;
+        $formData['payment'] = " ";
+        $formData['description'] = " ";
+        Payment::create($formData);
+
+        return redirect()->route('payments.index')->with("success", 'Payment authorised');
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function invoice($id)
+    {
+        $payment = Payment::find($id);
+        $converter = new Converter("dollars", "cents");
+        $payment['words'] = $converter->convert($payment->amount_spend);
+        $card = Card::find($payment->card_id);
+        $data = compact('payment', 'card');
+
+        $pdf = Pdf::loadView('payments.invoice',$data)->setPaper('a4', 'landscape');
+
+        return $pdf->download(sprintf('%s.pdf', $payment->id));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function checkout(Request $request)
+    {
+        $title = 'confirm payment';
+        $validator =  Validator::make($request->all(),[
+            'card_number' => 'required|digits:16',
+            'address' => 'required',
+            'city' => 'required',
+            'country' => ['required', Rule::in(array_keys(COUNTRIES))],
+            'postal_code' => 'sometimes',
+            'email_address' => 'required|email',
+            'phone_number' => 'required',
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'state' => Rule::requiredIf(function () use ($request) {
+                return $request->input('country') === 'US' || $request->input('country') === 'GB';
+            }),
+        ]);
+
+        if ($validator->fails()) {    
+                return back()
+                    ->withErrors($validator)
+                    ->withInput();
+        }
+
+        $invoice = $request->session()->get('step_one');
+        $referenceNumber = $this->getReferenceNumber(20);
+        $transactionUUD = uniqid();
+
+        $params = [
+            "access_key" => env('ACCESS_KEY'),
+            "profile_id" => env('PROFILE_ID'),
+            'transaction_uuid' =>  $transactionUUD,
+            "signed_field_names" => "access_key,profile_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency,bill_to_email,bill_to_forename",
+            "unsigned_field_names" => null,
+            'signed_date_time' => gmdate("Y-m-d\TH:i:s\Z"),
+            "locale" => "en",
+            "transaction_type" => "sale",
+            "reference_number" => $referenceNumber,
+            "amount" => $invoice['amount_spend'],
+            "card_number" => $request->get('card_number'),
+            "currency" => $invoice['currency'],
+            "submit" => "Submit",
+            'bill_to_email' => $request->get('email_address'),
+            'bill_to_forename' => $request->get('first_name'),
+            'bill_to_surname' => $request->get('last_name'),
+            'bill_to_phone' => $request->get('phone_number'),
+            'bill_to_address_city' => $request->get('city'),
+            'bill_to_address_country' => trim($request->get('country')),
+            'bill_to_address_line1' => trim($request->get('address')),
+            'bill_to_address_postal_code' => trim($request->get('postal_code')),
+            'bill_to_address_state' => trim($request->get('state')),
+        ];
+
+        $params['signed_field_names'] = trim(implode(',',array_keys($params)));
+        $saveCard = $request->get('save') === '1' ? true: false;
+        $card = null;
+        if ($saveCard){
+             $data = $request->all();
+             $data['name'] = $request->get('first_name');
+             $data['surname'] = $request->get('last_name');
+             $data['user_id'] = Auth::id();
+             $card = Card::create($data);
+        }
+
+        $serviceType = $invoice['service_type'];
+        $otherFields = array_filter([$invoice['service_type_1'], $invoice['service_type_2']]);
+        $serviceTypes = array_merge([$serviceType], $otherFields);
+        $serviceTypes = array_filter($serviceTypes);
+        $serviceTypesString = implode(', ', $serviceTypes);
+
+        $webhook = [
+            'reference_id' => $referenceNumber,
+            'transaction_id' => $transactionUUD,
+            'save_card' => $saveCard,
+            'user_id' => Auth::id(),
+            'service_type' => $serviceTypesString,
+            'invoice_reference' => $invoice['invoice_reference'],
+            'card_id' => ($card === null) ? null : $card->id,
+            'currency' => $params['currency'],
+        ];
+
+        $card = ($card === null) ? $request->all(): $card->toArray();
+        $card['full_name'] = $request->get('first_name') . ' '. $request->get('last_name');
+
+        $webhook = Webhook::create($webhook);
+        return view('payments.checkouts', compact('title', 'invoice', 'card', 'params'));
+    }
+
+    private function getReferenceNumber(int $length){
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        return Str::random($length, $characters);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+
+        $data = $request->all();
+        $request->validate([
+            'invoice_reference' => 'required',
+            'card_id' => 'required',
+            'description' => 'required',
+            'service_type' => 'required',
+            'amount_spend' => 'required|numeric',
+            'payment_method' => 'required',
+            'transaction_reference' => 'required',
+        ]);
+
+
+        $data['user_id'] = Auth::user()->id;
+
+        $card = Payment::create($data);
+        return redirect()->route('payments.index')->with('success', 'Payments created successfully.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $payment = Payment::where('user_id', Auth::id())->where('id', $id)->first();
+        $payment->delete();
+        return redirect()->route('payments.index')->with('success', 'Payment deleted successfully.');
+    }
+
+    public function searchCards(Request $request)
+    {
+        $title = 'search';
+        $searchQuery = $request->input('query');
+        $payments = Payment::query()
+             ->where('user_id', Auth::user()->id)
+             ->where(function ($query) use ($searchQuery) {
+                $query->where('invoice_reference', 'like', "%{$searchQuery}%")
+                ->orWhere('description', 'like', "%{$searchQuery}%")
+                ->orWhere('service_type', 'like', "%{$searchQuery}%")
+                ->orWhere('amount_spend', '=', $searchQuery)
+                ->orWhere('status', 'like', "%{$searchQuery}%")
+                ->orWhere('transaction_reference', 'like', "%{$searchQuery}%");
+            })->paginate(10);
+        
+        return view('payments.index', compact('payments', 'title'));
+    }
+}
