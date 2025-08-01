@@ -163,7 +163,7 @@ class CustomAuthController extends Controller
         // Auto-login the user after registration
         Auth::login($createUser);
         
-        return redirect()->route('dashboards')->with('success', 'Account created successfully! Welcome to your dashboard.');
+        return redirect()->route('login')->with('success', 'Account created successfully! Please login to continue.');
     }
 
     public function resendEmail()
