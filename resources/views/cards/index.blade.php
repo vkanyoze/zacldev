@@ -22,8 +22,11 @@
        <a href="{{ route('cards.create') }}"><button class="px-6 py-4 bg-green-500 text-white rounded-md">Add new card</button></a>
     </div>
     <div class="mt-6 text-custom-gray">You have {{ $cards->total() }} cards in total</div>
+    @push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endpush
     <div class="relative overflow-x-auto mt-4">
-        <table class="w-full text-sm text-left text-custom-gray dark:text-gray-400 border-b border-t">
+        <table id="cards-table" class="w-full text-sm text-left text-custom-gray dark:text-gray-400 border-b border-t">
             <thead class="text-xs text-gray-700  bg-gray-50 dark:bg-gray-700 dark:text-gray-400 border-b-2">
                 <tr>
                     <th scope="col" class="px-6 py-3">
@@ -108,6 +111,15 @@
 </div>
 <div class="w-ful text-center mt-4"><p>Showing {{ $cards->firstItem() }} to {{ $cards->lastItem() }} of {{ $cards->total() }} results</p></div>
 </main>
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#cards-table').DataTable();
+  });
+</script>
+@endpush
 @if(session('success'))
 <div id="alert" class="text-white fixed drop-shadow-md top-4 right-4 w-96 z-20 flex p-4 mb-4 border-l-4 bg-custom-green" role="alert">
     <svg class="flex-shrink-0 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>

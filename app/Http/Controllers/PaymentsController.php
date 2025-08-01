@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use TNkemdilim\MoneyToWords\Converter;
 use Illuminate\Support\Str;
+use Illuminate\Http\Response;
 
 class PaymentsController extends Controller
 {
@@ -65,7 +66,7 @@ class PaymentsController extends Controller
         $request->session()->put('step_one', $stepOne);
 
         $title = 'select payment';
-        $countries = COUNTRIES;
+        $countries = config('countries');
         return view('payments.cards', compact('title', 'stepOne', 'countries'));
     }
 
@@ -96,6 +97,7 @@ class PaymentsController extends Controller
            return redirect()->route('payments.index')->with("error", $results['message']);
         }
 
+        // Create card record
         $sam = $request->session()->get('step_two');
         $sam['name'] = explode(' ',$sam['full_name'])[0];
         $sam['surname'] = explode(' ',$sam['full_name'])[1];
@@ -103,17 +105,35 @@ class PaymentsController extends Controller
         $sam['user_id'] = auth()->user()->id;
 
         $card = Card::create($sam);
-        $formData = $request->session()->get('step_one');
-        $formData['transaction_reference'] = $results['processorInformation']['transactionId'];
-        $formData['reconciliaton_reference'] = $results['reconciliationId'];
-        $formData['status'] = $results['status'];
-        $formData['user_id'] = auth()->user()->id;
-        $formData['card_id'] = $card->id;
-        $formData['payment'] = " ";
-        $formData['description'] = " ";
-        Payment::create($formData);
+        
+        // Get step one data for payment
+        $stepOneData = $request->session()->get('step_one');
+        
+        // Prepare payment data
+        $paymentData = [
+            'invoice_reference' => $stepOneData['invoice_reference'],
+            'description' => $stepOneData['description'] ?? 'Payment for ' . $stepOneData['service_type'],
+            'service_type' => $stepOneData['service_type'],
+            'amount_spend' => $stepOneData['amount_spend'],
+            'payment_method' => 'credit_card',
+            'transaction_reference' => $results['processorInformation']['transactionId'] ?? 'TXN_' . uniqid(),
+            'reconciliaton_reference' => $results['reconciliationId'] ?? 'REC_' . uniqid(),
+            'status' => $results['status'],
+            'user_id' => auth()->user()->id,
+            'card_id' => $card->id,
+            'payment' => 'completed',
+            'currency' => $stepOneData['currency'] ?? 'USD',
+            'name' => $sam['name'],
+            'surname' => $sam['surname']
+        ];
 
-        return redirect()->route('payments.index')->with("success", 'Payment authorised');
+        // Create payment record
+        $payment = Payment::create($paymentData);
+
+        // Clear session data
+        $request->session()->forget(['step_one', 'step_two']);
+
+        return redirect()->route('payments.index')->with("success", 'Payment processed successfully! Transaction ID: ' . $paymentData['transaction_reference']);
     }
 
     /**
@@ -146,7 +166,7 @@ class PaymentsController extends Controller
             'card_number' => 'required|digits:16',
             'address' => 'required',
             'city' => 'required',
-            'country' => ['required', Rule::in(array_keys(COUNTRIES))],
+            'country' => ['required', Rule::in(array_keys(config('countries')))],
             'postal_code' => 'sometimes',
             'email_address' => 'required|email',
             'phone_number' => 'required',
@@ -255,8 +275,8 @@ class PaymentsController extends Controller
 
         $data['user_id'] = Auth::user()->id;
 
-        $card = Payment::create($data);
-        return redirect()->route('payments.index')->with('success', 'Payments created successfully.');
+        $payment = Payment::create($data);
+        return redirect()->route('payments.index')->with('success', 'Payment created successfully.');
     }
 
     /**
@@ -288,5 +308,58 @@ class PaymentsController extends Controller
             })->paginate(10);
         
         return view('payments.index', compact('payments', 'title'));
+    }
+
+    /**
+     * Export payments to CSV
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function export()
+    {
+        $payments = Payment::where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $filename = 'payments_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($payments) {
+            $file = fopen('php://output', 'w');
+            
+            // Add CSV headers
+            fputcsv($file, [
+                'Date',
+                'Description', 
+                'Invoice Reference',
+                'Service Type',
+                'Status',
+                'Amount (USD)',
+                'Currency'
+            ]);
+
+            // Add data rows
+            foreach ($payments as $payment) {
+                $serviceType = str_replace('_', ' ', ucwords($payment->service_type));
+                
+                fputcsv($file, [
+                    $payment->created_at->format('Y-m-d H:i:s'),
+                    $payment->description,
+                    $payment->invoice_reference,
+                    $serviceType,
+                    $payment->status,
+                    $payment->amount_spend,
+                    $payment->currency ?? 'USD'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

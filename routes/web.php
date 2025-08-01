@@ -66,6 +66,7 @@ Route::middleware('auth')->prefix('payments')->group(function () {
     Route::delete('/{id}', [PaymentsController::class, 'destroy'])->name('payments.destroy'); // delete a payments
     Route::get('/search', [PaymentsController::class, 'searchCards'])->name('payments.search'); // search for payments
     Route::post('invoice/{id}', [PaymentsController::class, 'invoice'])->name('payments.invoice');
+    Route::get('/export', [PaymentsController::class, 'export'])->name('payments.export'); // export payments to CSV
 });
 Route::get('send-email-queue', function(){
     $details['email'] = '<EMAIL ADDRESS>';

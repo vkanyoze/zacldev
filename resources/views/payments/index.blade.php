@@ -2,6 +2,10 @@
 @section('content')
 @include('header')
 @include('side-bar', ['activeNavItem' => 'payments'])
+@push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+@endpush
 <main class="p-4 sm:ml-64 py-16">
     <div class="mt-4 text-2xl font-bold text-custom-gray">Payments</div>
     <div class="text-lg mt-2 text-custom-gray">View Past Transactions, Make New Payments, and Print Receipts</div>
@@ -17,11 +21,19 @@
                 <button type="submit" class="text-white absolute right-2.5 bottom-2.5 bg-custom-gray hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded text-sm px-4 py-2 ">Search</button>
             </div>
         </form>
-    <a href="{{ route('payments.create') }} "><button class="px-6 py-4 bg-green-500 text-white rounded-md">New payment</button></a>
+        <div class="flex gap-3">
+            <a href="{{ route('payments.export') }}" class="px-6 py-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Export CSV
+            </a>
+            <a href="{{ route('payments.create') }} "><button class="px-6 py-4 bg-green-500 text-white rounded-md">New payment</button></a>
+        </div>
     </div>
     <div class="mt-6 text-custom-gray">You have made {{ $payments->total() }} payments in total</div>
     <div class="relative overflow-x-auto mt-4">
-        <table class="w-full text-sm text-left text-custom-gray dark:text-gray-400 border-b border-t">
+        <table id="payments-table" class="w-full text-sm text-left text-custom-gray dark:text-gray-400 border-b border-t">
             <thead class="text-xs text-gray-700  bg-gray-50 dark:bg-gray-700 dark:text-gray-400 border-b-2">
                 <tr>
                     <th scope="col" class="px-6 py-3">
@@ -111,6 +123,26 @@
 </div>
 <div class="w-ful text-center mt-4"><p>Showing {{ $payments->firstItem() }} to {{ $payments->lastItem() }} of {{ $payments->total() }} results</p></div>
 </main>
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#payments-table').DataTable({
+      dom: 'Bfrtip',
+      buttons: [
+        'copy', 'csv', 'excel', 'pdf', 'print'
+      ]
+    });
+  });
+</script>
+@endpush
 @if(session('success'))
 <div id="alert" class="text-white fixed drop-shadow-md top-4 right-4 w-96 z-20 flex p-4 mb-4 border-l-4 bg-custom-green" role="alert">
     <svg class="flex-shrink-0 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>

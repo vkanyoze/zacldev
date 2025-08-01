@@ -1,6 +1,6 @@
 <?php
 
-const COUNTRIES = [
+return [
     'AF' => 'Afghanistan',
     'AX' => 'Aland Islands',
     'AL' => 'Albania',
@@ -73,7 +73,7 @@ const COUNTRIES = [
     'ER' => 'Eritrea',
     'EE' => 'Estonia',
     'ET' => 'Ethiopia',
-        'FK' => 'Falkland Islands (UK)',
+    'FK' => 'Falkland Islands (UK)',
     'FO' => 'Faroe Islands (DK)',
     'FJ' => 'Fiji',
     'FI' => 'Finland',

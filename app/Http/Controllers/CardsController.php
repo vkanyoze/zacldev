@@ -35,7 +35,7 @@ class CardsController extends Controller
     public function create()
     {
         $title  = 'Add new card';
-        $countries = COUNTRIES;
+        $countries = config('countries');
         return view('cards.posts', compact('title', 'countries'));
     }
 
@@ -52,7 +52,7 @@ class CardsController extends Controller
             'address' => 'required',
             'city' => 'required',
             'state' => 'required',
-            'country' => ['required', Rule::in(array_keys(COUNTRIES))],
+            'country' => ['required', Rule::in(array_keys(config('countries')))],
             'postal_code' => 'sometimes',
             'email_address' => 'required|email',
             'phone_number' => 'required',
@@ -131,7 +131,7 @@ class CardsController extends Controller
     {
         $card = Card::where('user_id', Auth::id())->where('id', $id)->first();
         $title = 'edit Card';
-        $countries = COUNTRIES;
+        $countries = config('countries');
         return view('cards.edits', compact('card', 'title', 'countries'));
     }
 
@@ -150,7 +150,7 @@ class CardsController extends Controller
             'address' => 'required',
             'city' => 'required',
             'state' => 'required',
-            'country' => ['required', Rule::in(array_keys(COUNTRIES))],
+            'country' => ['required', Rule::in(array_keys(config('countries')))],
             'postal_code' => 'sometimes',
             'email_address' => 'required|email',
             'phone_number' => 'required',

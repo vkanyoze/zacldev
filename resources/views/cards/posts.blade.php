@@ -11,7 +11,7 @@
             </div>
             <div class="text-lg mt-2 flex max-w-2xl text-custom-gray">Its easy, so that you don't have to enter your card everytime</div>
             <div>
-            <form action="{{ route('cards.store') }}" method="POST">
+            <form action="{{ route('cards.store') }}" method="POST" onsubmit="return checkVisaBeforeSubmit(this)">
     @csrf
     @method('POST')
     <div class="flex max-w-2xl">
@@ -34,12 +34,59 @@
     </div>
     <div>
     <label class="block text-custom-gray font-bold mt-3  max-w-2xl" for="card_number">Card Number<label>
-            <input type="text" placeholder="Card  Number" max="16" value="{{ old('card_number') }}"
-                name="card_number" required  class="mt-2 w-full p-2 rounded border {{ $errors->has('card_number') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal">
-                @if ($errors->has('card_number'))
-                    <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('card_number') }}</span>
-                @endif
+<div class="relative">
+  <input
+    type="text"
+    placeholder="Card  Number"
+    max="16"
+    value="{{ old('card_number') }}"
+    name="card_number"
+    required
+    id="card_number_input"
+    oninput="validateVisaCard(this)"
+    class="mt-2 w-full p-2 pr-12 rounded border {{ $errors->has('card_number') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal"
+    style="box-sizing: border-box;"
+  >
+  <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-blue-700">
+    <i class="fab fa-cc-visa" style="font-size: 1.5em;"></i>
+  </span>
+</div>
+<span id="card_number_error" class="text-xs tracking-wide text-red-600 font-normal hidden">Only VISA cards are allowed. Please enter a valid VISA card number.</span>
+@if ($errors->has('card_number'))
+    <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('card_number') }}</span>
+@endif
     </div>
+    <div class="flex flex-row gap-4 mt-4">
+  <div class="flex-1">
+    <label class="block text-custom-gray font-bold mb-1" for="expiry_month">Expiry Month</label>
+    <select id="expiry_month" name="expiry_month" required class="w-full p-2 rounded border border-custom-green focus:outline-none focus:border-blue-600 font-normal">
+      <option value="">MM</option>
+      @for ($m = 1; $m <= 12; $m++)
+        <option value="{{ sprintf('%02d', $m) }}">{{ sprintf('%02d', $m) }}</option>
+      @endfor
+    </select>
+  </div>
+  <div class="flex-1">
+    <label class="block text-custom-gray font-bold mb-1" for="expiry_year">Expiry Year</label>
+    <select id="expiry_year" name="expiry_year" required class="w-full p-2 rounded border border-custom-green focus:outline-none focus:border-blue-600 font-normal">
+      <option value="">YY</option>
+      @for ($y = date('y'); $y <= date('y') + 15; $y++)
+        <option value="{{ $y }}">{{ $y }}</option>
+      @endfor
+    </select>
+  </div>
+  <div class="flex-1">
+    <label class="block text-custom-gray font-bold mb-1" for="cvv">CVV
+      <span class="ml-1 align-middle relative group cursor-pointer">
+        <i class="fas fa-info-circle text-gray-400"></i>
+        <span class="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-gray-800 text-white text-xs rounded py-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-normal text-center">
+          3 digits on back of card
+        </span>
+      </span>
+    </label>
+    <input type="text" maxlength="4" minlength="3" pattern="\\d{3,4}" id="cvv" name="cvv" required placeholder="CVV" class="w-full p-2 rounded border border-custom-green focus:outline-none focus:border-blue-600 font-normal">
+  </div>
+</div>
     <div>
     <label class="block text-custom-gray font-bold mt-3  max-w-2xl" for="card_number">Billing Address<label>
             <input type="text" placeholder="Your Address"  value="{{ old('address') }}"
@@ -123,5 +170,63 @@
   function goBack() {
       window.history.back();
     }
+
+  function validateVisaCard(input) {
+    const value = input.value.replace(/\D/g, '');
+    const errorSpan = document.getElementById('card_number_error');
+    // VISA: starts with 4, 13 or 16 digits
+    const isVisa = /^4(\d{12}|\d{15})$/.test(value);
+    if (value.length === 0) {
+      errorSpan.classList.add('hidden');
+      input.classList.remove('border-red-600');
+      input.classList.add('border-custom-green');
+      return;
+    }
+    if (!value.startsWith('4')) {
+      errorSpan.classList.remove('hidden');
+      input.classList.add('border-red-600');
+      input.classList.remove('border-custom-green');
+      return;
+    }
+    if ((value.length === 13 || value.length === 16) && !isVisa) {
+      errorSpan.classList.remove('hidden');
+      input.classList.add('border-red-600');
+      input.classList.remove('border-custom-green');
+      return;
+    }
+    errorSpan.classList.add('hidden');
+    input.classList.remove('border-red-600');
+    input.classList.add('border-custom-green');
+  }
+
+  function checkVisaBeforeSubmit(form) {
+    const input = document.getElementById('card_number_input');
+    const value = input.value.replace(/\D/g, '');
+    const errorSpan = document.getElementById('card_number_error');
+    const isVisa = /^4(\d{12}|\d{15})$/.test(value);
+    if (!isVisa) {
+      errorSpan.classList.remove('hidden');
+      input.classList.add('border-red-600');
+      input.classList.remove('border-custom-green');
+      input.focus();
+      return false;
+    }
+    return true;
+  }
+
+  // Auto-advance listeners for expiry fields
+  document.addEventListener('DOMContentLoaded', function() {
+    const month = document.getElementById('expiry_month');
+    const year = document.getElementById('expiry_year');
+    const cvv = document.getElementById('cvv');
+    if (month && year) {
+      month.addEventListener('change', function() {
+        if (month.value && year) year.focus();
+      });
+      year.addEventListener('change', function() {
+        if (year.value && cvv) cvv.focus();
+      });
+    }
+  });
 </script>
 @endsection

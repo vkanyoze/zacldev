@@ -80,21 +80,47 @@ class CustomAuthController extends Controller
             'password' => 'required',
         ]);
 
-   
+        // Debug: Log the request data
+        \Log::info('Login attempt', [
+            'email' => $request->email,
+            'has_remember' => $request->has('remember'),
+            'all_data' => $request->all()
+        ]);
+
         $credentials = $request->only('email', 'password');
         $user = User::where('email', $credentials['email'])->first();
+        
+        // Debug: Log user lookup result
+        \Log::info('User lookup result', [
+            'user_found' => $user ? true : false,
+            'user_id' => $user ? $user->id : null,
+            'is_email_verified' => $user ? $user->is_email_verified : null
+        ]);
+        
         if (!$user){
            return redirect("login")->withInput()->withErrors(['email' => 'Login details are not valid']);
         }
 
-        if (!$user->is_email_verified) {
-            return redirect("login")->withInput()->withErrors(['email' => 'Email not verified']);
-        }
+        // Email verification check - commented out to allow login without verification
+        // if (!$user->is_email_verified) {
+        //     return redirect("login")->withInput()->withErrors(['email' => 'Email not verified']);
+        // }
 
-        if (Auth::attempt($credentials)) {
-            return redirect()->action([PaymentsController::class, 'index'])->withSuccess('Signed in');
+        // Check if "Remember Me" is checked
+        $remember = $request->has('remember');
+
+        // Debug: Log authentication attempt
+        \Log::info('Authentication attempt', [
+            'credentials' => $credentials,
+            'remember' => $remember
+        ]);
+
+        if (Auth::attempt($credentials, $remember)) {
+            \Log::info('Authentication successful', ['user_id' => Auth::id()]);
+            return redirect()->route('dashboards')->withSuccess('Signed in');
         }
   
+        \Log::warning('Authentication failed', ['email' => $request->email]);
         return redirect("login")->withInput()->withErrors(['email' => 'Login details are not valid']);
     }
 
@@ -131,9 +157,13 @@ class CustomAuthController extends Controller
               'token' => $token
             ]);
   
-        SendEmailJob::dispatch($request->email, new SendWelcomeEmail($token));
+        // Email verification is now optional - commented out for immediate access
+        // SendEmailJob::dispatch($request->email, new SendWelcomeEmail($token));
 
-        return redirect()->route('login')->with('success', 'Your account has been created. Check your email address');
+        // Auto-login the user after registration
+        Auth::login($createUser);
+        
+        return redirect()->route('dashboards')->with('success', 'Account created successfully! Welcome to your dashboard.');
     }
 
     public function resendEmail()
@@ -282,17 +312,23 @@ class CustomAuthController extends Controller
     {
       return User::create([
         'email' => $data['email'],
-        'password' => Hash::make($data['password'])
+        'password' => Hash::make($data['password']),
+        'is_email_verified' => 1  // Auto-verify users for immediate login
       ]);
     }    
     
     public function dashboard()
     {
         if(Auth::check()){
-            $title = 'Payments';
-            return view('payments', compact('title'));
+            $title = 'Dashboard';
+            $user = Auth::user();
+            // Example statistics (replace with real queries as needed)
+            $paymentsCount = $user->payments()->count();
+            $cardsCount = $user->cards()->count();
+            $lastPayment = $user->payments()->latest()->first();
+            $totalSpent = $user->payments()->sum('amount_spend');
+            return view('dashboard', compact('title', 'user', 'paymentsCount', 'cardsCount', 'lastPayment', 'totalSpent'));
         }
-  
         return redirect("login")->withSuccess('You are not allowed to access');
     }
     

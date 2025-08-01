@@ -30,8 +30,8 @@
     </div>
     <div>
     <label class="block text-custom-gray font-bold mt-3  max-w-2xl" for="card_number">Card Number<label>
-            <input type="text" placeholder="Card  Number" max="16" value="{{ old('card_number') }}"
-                name="card_number" required  class="mt-2 w-full p-2 rounded border {{ $errors->has('card_number') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal">
+            <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" value="{{ old('card_number') }}"
+                name="card_number" id="card_number" required  class="mt-2 w-full p-2 rounded border {{ $errors->has('card_number') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal">
                 @if ($errors->has('card_number'))
                     <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('card_number') }}</span>
                 @endif
@@ -112,4 +112,59 @@
 
 </form>
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cardNumberInput = document.getElementById('card_number');
+    
+    // Format card number as user types
+    cardNumberInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        let formattedValue = '';
+        
+        // Add spaces after every 4 digits
+        for (let i = 0; i < value.length; i++) {
+            if (i > 0 && i % 4 === 0) {
+                formattedValue += ' ';
+            }
+            formattedValue += value[i];
+        }
+        
+        // Limit to 16 digits (19 characters including spaces)
+        if (formattedValue.length > 19) {
+            formattedValue = formattedValue.substring(0, 19);
+        }
+        
+        e.target.value = formattedValue;
+    });
+    
+    // Handle backspace and delete properly
+    cardNumberInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            let value = e.target.value;
+            let cursorPosition = e.target.selectionStart;
+            
+            // If cursor is at a space, move it back one position
+            if (value[cursorPosition - 1] === ' ') {
+                e.target.setSelectionRange(cursorPosition - 1, cursorPosition - 1);
+            }
+        }
+    });
+    
+    // Format existing value on page load
+    if (cardNumberInput.value) {
+        let value = cardNumberInput.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        let formattedValue = '';
+        
+        for (let i = 0; i < value.length; i++) {
+            if (i > 0 && i % 4 === 0) {
+                formattedValue += ' ';
+            }
+            formattedValue += value[i];
+        }
+        
+        cardNumberInput.value = formattedValue;
+    }
+});
+</script>
 @endsection

@@ -1,6 +1,14 @@
 <div class="w-60 h-full shadow-md bg-custom-gray absolute py-4">
   <ul class="mt-16 relative">
     <li class="mt-4 relative">
+      <a class="flex items-center text-sm py-3 px-6 h-12 overflow-hidden {{ $activeNavItem === 'dashboard' ? 'bg-custom-green text-white hover:bg-custom-green font-bold' : 'text-white hover:text-gray-900 hover:bg-gray-100' }} text-ellipsis whitespace-nowrap hover:text-gray-900 hover:font-bold transition duration-300 ease-in-out" href="{{ route('dashboards') }}" data-mdb-ripple="true" data-mdb-ripple-color="dark">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 hr-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 8h2v-2H7v2zm0-4h2v-2H7v2zm0-4h2V7H7v2zm4 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2zm4 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2z" />
+        </svg>
+        <span>Dashboard</span>
+      </a>
+    </li>
+    <li class="mt-4 relative">
       <a class="flex items-center text-sm py-3 px-6 h-12 overflow-hidden {{ $activeNavItem == 'payments' ? 'bg-custom-green text-white  hover:bg-custom-green font-bold  ' : 'text-white hover:text-gray-900 hover:bg-gray-100' }}   text-ellipsis whitespace-nowrap hover:text-gray-900hover:font-bold transition duration-300 ease-in-out" href="{{ route('payments.index') }}" data-mdb-ripple="true" data-mdb-ripple-color="dark">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 hr-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
