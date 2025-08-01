@@ -54,7 +54,7 @@ class User extends Authenticatable  implements Auditable
 
     public function cards()
     {
-        return $this->hasMany(card::class);
+        return $this->hasMany(Card::class);
     }
 
     public function webhooks()
