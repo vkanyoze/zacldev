@@ -22,6 +22,10 @@ Route::get('/', function () {
     $subHeading = 'Access your account and manage your payments conveniently <br> and securely.';
     return view('sign-in', compact('title', 'subHeading'));
 });
+
+Route::get('/debug-analytics', function () {
+    return view('debug-analytics');
+});
 Route::get('dashboard', [CustomAuthController::class, 'dashboard'])->name('dashboards'); 
 Route::get('login', [CustomAuthController::class, 'index'])->name('login');
 Route::get('forgot', [CustomAuthController::class, 'forgot'])->name('forgot');
@@ -58,6 +62,7 @@ Route::middleware('auth')->prefix('cards')->group(function () {
 });
 Route::middleware('auth')->prefix('payments')->group(function () {
     Route::get('/', [PaymentsController::class, 'index'])->name('payments.index'); // show all payments
+    Route::post('/export', [PaymentsController::class, 'export'])->name('payments.export'); // export payments as CSV
     Route::get('/create', [PaymentsController::class, 'create'])->name('payments.create'); // show payments create form
     Route::post('/', [PaymentsController::class, 'store'])->name('payments.store'); // store newly created payments
     Route::get('/select', [PaymentsController::class, 'select'])->name('payments.card'); // store newly created payments
@@ -66,8 +71,26 @@ Route::middleware('auth')->prefix('payments')->group(function () {
     Route::delete('/{id}', [PaymentsController::class, 'destroy'])->name('payments.destroy'); // delete a payments
     Route::get('/search', [PaymentsController::class, 'searchCards'])->name('payments.search'); // search for payments
     Route::post('invoice/{id}', [PaymentsController::class, 'invoice'])->name('payments.invoice');
-    Route::get('/export', [PaymentsController::class, 'export'])->name('payments.export'); // export payments to CSV
 });
+
+// Admin Auth Routes
+Route::prefix('admin')->group(function () {
+    // Existing admin routes...
+    
+    // Password Reset Routes
+    Route::get('password/reset', [\App\Http\Controllers\Admin\ForgotPasswordController::class, 'showLinkRequestForm'])
+        ->name('admin.password.request');
+        
+    Route::post('password/email', [\App\Http\Controllers\Admin\ForgotPasswordController::class, 'sendResetLinkEmail'])
+        ->name('admin.password.email');
+        
+    Route::get('password/reset/{token}', [\App\Http\Controllers\Admin\ResetPasswordController::class, 'showResetForm'])
+        ->name('admin.password.reset');
+        
+    Route::post('password/reset', [\App\Http\Controllers\Admin\ResetPasswordController::class, 'reset'])
+        ->name('admin.password.update');
+});
+
 Route::get('send-email-queue', function(){
     $details['email'] = '<EMAIL ADDRESS>';
     dispatch(new App\Jobs\TestEmailJob($details));
@@ -76,3 +99,27 @@ Route::get('send-email-queue', function(){
 
 Route::post('/webhook', [WebhookController::class, 'handleWebhook']);
 //php artisan queue:listen
+
+// Test notification route (only in local environment)
+if (app()->environment('local')) {
+    Route::get('/test-notification', function () {
+        $admin = \App\Models\Admin::first();
+        
+        if (!$admin) {
+            return 'No admin user found. Please create one first.';
+        }
+        
+        // Send a test notification
+        $admin->notify(new \App\Notifications\AdminNotification(
+            'test',
+            'Test Notification',
+            'This is a test notification from the system.',
+            [
+                'url' => '/admin/dashboard',
+                'icon' => 'bell'
+            ]
+        ));
+        
+        return 'Test notification sent to ' . $admin->email;
+    });
+}

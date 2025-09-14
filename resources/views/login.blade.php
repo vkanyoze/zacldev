@@ -1,89 +1,130 @@
 @extends('app')
+
 @section('content')
-<div class="flex items-center justify-center min-h-screen bg-custom-gray">
-    <div class="px-10 py-8 text-left bg-white shadow-lg">
-        <div class="flex justify-center">
-            <a href="https://www.zacl.co.zm/"><img src="/front-logo.png" alt="logo" /></a>
-        </div>
-        <h3 class="mt-9 text-2xl font-bold text-center text-custom-gray">Sign In</h3>
-        <p class="mt-2 text-center text-custom-gray">
-            @if (Session::has('subHeading'))
-            {!! Session::get('subHeading') !!}
-            @else
-            {!! $subHeading !!}
-            @endif
-        </p>
-        <form method="POST" action="{{ route('login.custom') }}">
-            @csrf
-            <div class="mt-6">
-                <div>
-                    <label class="block text-custom-gray font-bold" for="email">Email<label>
-                            <input type="email" placeholder="Email" name="email" class="mt-2 w-full p-3 rounded border {{ $errors->has('email') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal">
-                            @if ($errors->has('email'))
-                            <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('email') }}</span>
-                            @endif
-                </div>
-                <label class="mt-4 block text-custom-gray font-bold" for="email">Password</label>
-                <div class="relative w-full mt-1">
-                    <div class="absolute inset-y-0 right-0 flex items-center px-2 py-2">
-                        <input class="hidden js-password-toggle" id="toggle" type="checkbox" />
-                        <label class="mt-1.5 bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 cursor-pointer js-password-label " for="toggle">show</label>
-                    </div> <input id="password" name="password" type="password" autocomplete="off" placeholder="password" class="js-password mt-2 w-full p-3 rounded border {{ $errors->has('password') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal">
-                </div>
-                @if ($errors->has('password'))
-                <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('password') }}</span>
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
+        <div class="text-center">
+            <a href="https://www.zacl.co.zm/" class="flex justify-center">
+                <img src="/front-logo.png" alt="ZACL Logo" class="h-16 w-auto">
+            </a>
+            <h2 class="mt-8 text-3xl font-extrabold text-gray-900">
+                Welcome Back
+            </h2>
+            <p class="mt-2 text-sm text-gray-600">
+                @if (Session::has('subHeading'))
+                    {!! Session::get('subHeading') !!}
+                @else
+                    {!! $subHeading ?? 'Please sign in to your account' !!}
                 @endif
-                <div class="mt-9">
-                    <button class="px-6 py-4 focus:ring-4 focus:ring-blue-300 rounded mt-4 w-full text-white bg-custom-green text-lg font-bold">Continue</button>
+            </p>
+        </div>
+
+        <form class="mt-8 space-y-6" action="{{ route('login.custom') }}" method="POST">
+            @csrf
+            <div class="rounded-md shadow-sm space-y-4">
+                <div>
+                    <label for="email-address" class="sr-only">Email address</label>
+                    <input id="email-address" name="email" type="email" autocomplete="email" required
+                        class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 
+                               placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                               focus:border-blue-500 focus:z-10 sm:text-sm {{ $errors->has('email') ? 'border-red-500' : 'border-gray-300' }}"
+                        placeholder="Email address">
+                    @if ($errors->has('email'))
+                        <p class="mt-1 text-sm text-red-600">{{ $errors->first('email') }}</p>
+                    @endif
                 </div>
-                <div class="mt-4 w-full justify-center text-sm text-center text-custom-gray font-normal">
-                    Forgot your password ? <a href="{{ route('forgot') }}" class="text-blue-900 hover:underline font-bold">Reset Password</a> if you don't have an account <br> <a href="{{ route('register-user') }}" class="text-blue-900 hover:underline font-bold">Create Account</a>
+                <div class="relative">
+                    <label for="password" class="sr-only">Password</label>
+                    <div class="relative">
+                        <input id="password" name="password" type="password" autocomplete="current-password" required
+                            class="appearance-none rounded-lg relative block w-full px-4 py-3 border border-gray-300 
+                                   placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                                   focus:border-blue-500 focus:z-10 sm:text-sm {{ $errors->has('password') ? 'border-red-500' : 'border-gray-300' }}"
+                            placeholder="Password">
+                        <button type="button" onclick="togglePassword()" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
+                            <svg class="h-5 text-gray-500" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" fill="currentColor"/>
+                                <path fill-rule="evenodd" clip-rule="evenodd" 
+                                    d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" 
+                                    fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    @if ($errors->has('password'))
+                        <p class="mt-1 text-sm text-red-600">{{ $errors->first('password') }}</p>
+                    @endif
                 </div>
             </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input id="remember-me" name="remember" type="checkbox" 
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                        Remember me
+                    </label>
+                </div>
+
+                <div class="text-sm">
+                    <a href="{{ route('forgot') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                        Forgot your password?
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit"
+                    class="group relative w-full flex justify-center py-3 px-4 border border-transparent 
+                           text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Sign in
+                </button>
+            </div>
         </form>
+
+        <div class="text-center text-sm mt-6">
+            <p class="text-gray-600">
+                Don't have an account? 
+                <a href="{{ route('register-user') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                    Create Account
+                </a>
+            </p>
+        </div>
     </div>
 </div>
+
 @if(session('success'))
-<div id="alert" class="text-white fixed drop-shadow-md top-4 right-4 w-96 z-20 flex p-4 mb-4 border-l-4 bg-custom-green" role="alert">
-    <svg class="flex-shrink-0 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
-    <div class="ml-3 font-medium">
-        {{ session('success') }} 
+<div id="alert" class="fixed top-4 right-4 z-50 flex items-center p-4 mb-4 text-white bg-green-500 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out" role="alert">
+    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+    </svg>
+    <div>
+        <span class="font-medium">Success!</span> {{ session('success') }}
     </div>
-    <button type="button" onclick="closeAlert()" class="ml-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex h-8 w-8 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-gray-700"  data-dismiss-target="#alert-border-3" aria-label="Close">
-      <span class="sr-only">Dismiss</span>
-      <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+    <button type="button" onclick="document.getElementById('alert').remove()" class="ml-auto -mx-1.5 -my-1.5 text-white hover:text-gray-200 rounded-lg p-1.5 inline-flex h-8 w-8">
+        <span class="sr-only">Close</span>
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
     </button>
 </div>
-    <script>
-        const alertBox = document.getElementById('alert');
-        close.addEvent
-        if (alertBox) {
-            setTimeout(() => {
-                alertBox.remove();
-            }, 5000);
-        }
-        function closeAlert() {
-            var alertBox = document.getElementById("alert");
-            alertBox.style.display = "none";
-        }
-    </script>
 @endif
-@include('footer')
+
 <script>
-    const passwordToggle = document.querySelector('.js-password-toggle')
-    passwordToggle.addEventListener('change', function() {
-        const password = document.querySelector('.js-password'),
-            passwordLabel = document.querySelector('.js-password-label')
+    function togglePassword() {
+        const password = document.getElementById('password');
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+    }
 
-        if (password.type === 'password') {
-            password.type = 'text'
-            passwordLabel.innerHTML = 'hide'
-        } else {
-            password.type = 'password'
-            passwordLabel.innerHTML = 'show'
-        }
-
-        password.focus()
-    })
+    // Auto-hide success message after 5 seconds
+    const alert = document.getElementById('alert');
+    if (alert) {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    }
 </script>
 @endsection

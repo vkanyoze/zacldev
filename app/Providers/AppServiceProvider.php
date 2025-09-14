@@ -19,6 +19,28 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if ($this->app->runningInConsole()) {
+            $this->app->bind('url', function () {
+                return new \Illuminate\Routing\UrlGenerator(
+                    $this->app['router']->getRoutes(),
+                    $this->app->make('request')
+                );
+            });
+        }
+
+        // Register notification components
+        $this->registerNotificationComponents();
+    }
+
+    /**
+     * Register notification components.
+     *
+     * @return void
+     */
+    protected function registerNotificationComponents()
+    {
+        $this->loadViewsFrom(
+            resource_path('views/components/notifications'), 'notifications'
+        );
     }
 }

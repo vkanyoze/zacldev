@@ -311,52 +311,69 @@ class PaymentsController extends Controller
     }
 
     /**
-     * Export payments to CSV
+     * Export payments data as CSV
      *
-     * @return \Illuminate\Http\Response
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
     public function export()
     {
-        $payments = Payment::where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $filename = 'payments_' . date('Y-m-d_H-i-s') . '.csv';
-        
         $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=payments_" . date('Y-m-d') . ".csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
         ];
 
-        $callback = function() use ($payments) {
+        $callback = function() {
+            $user = Auth::user();
             $file = fopen('php://output', 'w');
             
-            // Add CSV headers
+            // Add User Information as headers
+            fputcsv($file, ['User Name', $user->name ?? 'N/A']);
+            fputcsv($file, ['User Email', $user->email ?? 'N/A']);
+            fputcsv($file, ['User ID', $user->id ?? 'N/A']);
+            fputcsv($file, ['Report Generated', now()->format('Y-m-d H:i:s')]);
+            fputcsv($file, []); // Empty line for separation
+            
+            // Add CSV headers for payments
             fputcsv($file, [
-                'Date',
+                'Date', 
+                'Invoice Number',
+                'Transaction ID',
                 'Description', 
-                'Invoice Reference',
-                'Service Type',
+                'Payment Method', 
+                'Amount', 
+                'Currency',
                 'Status',
-                'Amount (USD)',
-                'Currency'
+                'Created At',
+                'Updated At'
             ]);
 
-            // Add data rows
+            $payments = Payment::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
             foreach ($payments as $payment) {
-                $serviceType = str_replace('_', ' ', ucwords($payment->service_type));
-                
                 fputcsv($file, [
                     $payment->created_at->format('Y-m-d H:i:s'),
-                    $payment->description,
-                    $payment->invoice_reference,
-                    $serviceType,
-                    $payment->status,
-                    $payment->amount_spend,
-                    $payment->currency ?? 'USD'
+                    $payment->invoice_number ?? 'N/A',
+                    $payment->transaction_id ?? 'N/A',
+                    $payment->description ?? 'N/A',
+                    $payment->payment_method ?? 'N/A',
+                    $payment->amount_spend ? number_format($payment->amount_spend, 2) : '0.00',
+                    $payment->currency ?? 'USD',
+                    $payment->status ?? 'N/A',
+                    $payment->created_at->format('Y-m-d H:i:s'),
+                    $payment->updated_at->format('Y-m-d H:i:s')
                 ]);
             }
-
+            
+            // Add Summary
+            fputcsv($file, []); // Empty line for separation
+            fputcsv($file, ['Total Payments', $payments->count()]);
+            fputcsv($file, ['Total Amount', number_format($payments->sum('amount_spend'), 2)]);
+            
             fclose($file);
         };
 

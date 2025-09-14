@@ -21,10 +21,26 @@
                     <svg aria-hidden="true" class="w-5 h-5 text-gray-500 " fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
                 <input type="search" id="default-search" value="{{ old('query') }}"  name="query"  class="block w-full p-4 pl-10 text-sm text-gray-900 border border-custom-green rounded-lg bg-gray-50 focus:ring-blue-500  focus:outline-none  focus:border-blue-500" placeholder="Search cards..">
-                <button type="submit" class="text-white absolute right-2.5 bottom-2.5 bg-custom-gray hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded text-sm px-4 py-2 ">Search</button>
+                <button type="submit" class="text-white absolute right-2.5 bottom-2.5 bg-custom-gray hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded text-sm px-4 py-2">Search</button>
             </div>
         </form>
-    <a href="{{ route('payments.create') }} "><button class="px-6 py-4 bg-green-500 text-white rounded-md">New payment</button></a>
+        <div class="flex gap-8">
+            <form action="{{ route('payments.export') }}" method="GET" class="inline">
+                <button type="submit" class="px-6 py-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Export Payments
+                </button>
+            </form>
+            &nbsp; &nbsp;
+            <a href="{{ route('payments.create') }}" class="px-6 py-4 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New payment
+            </a>
+        </div>
     </div>
     <div class="mt-6 text-custom-gray">You have made {{ $payments->total() }} payments in total</div>
     <div class="relative overflow-x-auto mt-4">

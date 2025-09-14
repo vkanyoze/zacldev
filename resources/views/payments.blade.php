@@ -14,7 +14,18 @@
             </span>
             <input type="text" class="block w-96 pl-8 pr-3 py-2 border border-green-500 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500" placeholder="Search">
         </div>
-    <button class="px-4 py-2 bg-green-500 text-white rounded-md">New payment</button>
+        <div class="flex space-x-4">
+            <form action="{{ route('payments.export') }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Export
+                </button>
+            </form>
+            <a href="#" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">New payment</a>
+        </div>
     </div>
     <div class="mt-6 text-custom-gray">You have paid a ZMK 200, 000 in total with 120 payments</div>
     <div class="relative overflow-x-auto mt-4">

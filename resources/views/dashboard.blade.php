@@ -93,6 +93,11 @@
                 </div>
             </div>
 
+            <!-- Predictive Analytics Section -->
+            <div class="mb-8">
+                @include('components.simple-analytics')
+            </div>
+
             <!-- Recent Activity Section -->
             <div class="mb-8">
                 <!-- Recent Activity Card -->

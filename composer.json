@@ -12,10 +12,12 @@
         "dompdf/dompdf": "^2.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.0",
-        "laravel/sanctum": "^3.2",
+        "laravel/sanctum": "*",
         "laravel/tinker": "^2.8",
         "moneyphp/money": "^3.3",
         "owen-it/laravel-auditing": "^13.1",
+        "pusher/pusher-php-server": "^7.2",
+        "spatie/laravel-permission": "^6.21",
         "tnkemdilim/money-to-words-converter": "^2.1"
     },
     "require-dev": {

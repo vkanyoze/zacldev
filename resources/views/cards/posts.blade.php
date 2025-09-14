@@ -36,7 +36,7 @@
     <label class="block text-custom-gray font-bold mt-3  max-w-2xl" for="card_number">Card Number<label>
 <div class="relative">
   <input
-    type="text"
+    type="password"
     placeholder="Card  Number"
     max="16"
     value="{{ old('card_number') }}"
@@ -44,12 +44,17 @@
     required
     id="card_number_input"
     oninput="validateVisaCard(this)"
-    class="mt-2 w-full p-2 pr-12 rounded border {{ $errors->has('card_number') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal"
+    class="mt-2 w-full p-2 pr-20 rounded border {{ $errors->has('card_number') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal"
     style="box-sizing: border-box;"
   >
-  <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-blue-700">
-    <i class="fab fa-cc-visa" style="font-size: 1.5em;"></i>
-  </span>
+  <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+    <button type="button" onclick="toggleCardNumber()" class="text-gray-400 hover:text-gray-600 focus:outline-none mr-2">
+      <i id="card_toggle_icon" class="fas fa-eye"></i>
+    </button>
+    <span class="pointer-events-none text-blue-700">
+      <i class="fab fa-cc-visa" style="font-size: 1.5em;"></i>
+    </span>
+  </div>
 </div>
 <span id="card_number_error" class="text-xs tracking-wide text-red-600 font-normal hidden">Only VISA cards are allowed. Please enter a valid VISA card number.</span>
 @if ($errors->has('card_number'))
@@ -170,6 +175,21 @@
   function goBack() {
       window.history.back();
     }
+
+  function toggleCardNumber() {
+    const cardInput = document.getElementById('card_number_input');
+    const toggleIcon = document.getElementById('card_toggle_icon');
+    
+    if (cardInput.type === 'password') {
+      cardInput.type = 'text';
+      toggleIcon.classList.remove('fa-eye');
+      toggleIcon.classList.add('fa-eye-slash');
+    } else {
+      cardInput.type = 'password';
+      toggleIcon.classList.remove('fa-eye-slash');
+      toggleIcon.classList.add('fa-eye');
+    }
+  }
 
   function validateVisaCard(input) {
     const value = input.value.replace(/\D/g, '');

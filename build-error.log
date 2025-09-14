@@ -1,0 +1,38 @@
+﻿
+> build
+> vite build
+
+[36mvite v4.5.14 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 51 modules transformed.
+[32mΓ£ô built in 3.09s[39m
+node.exe : [31m[vite:css] [postcss] It looks like you're trying to 
+use `tailwindcss` directly as a PostCSS plugin. The PostCSS plugin 
+has moved to a separate package, so to continue using Tailwind CSS 
+with PostCSS you'll need to install `@tailwindcss/postcss` and 
+update your PostCSS configuration.[39m
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([31m[vite:css]...igura 
+   tion.[39m:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+file: [36mC:\projects\v2\zacldev\resources\css\app.css:undefined:und
+efined[39m
+[31merror during build:
+Error: [postcss] It looks like you're trying to use `tailwindcss` 
+directly as a PostCSS plugin. The PostCSS plugin has moved to a 
+separate package, so to continue using Tailwind CSS with PostCSS 
+you'll need to install `@tailwindcss/postcss` and update your 
+PostCSS configuration.
+    at We 
+(C:\projects\v2\zacldev\node_modules\tailwindcss\dist\lib.js:35:2121)
+    at LazyResult.runOnRoot (C:\projects\v2\zacldev\node_modules\vite
+\node_modules\postcss\lib\lazy-result.js:361:16)
+    at LazyResult.runAsync (C:\projects\v2\zacldev\node_modules\vite\
+node_modules\postcss\lib\lazy-result.js:290:26)
+    at LazyResult.async (C:\projects\v2\zacldev\node_modules\vite\nod
+e_modules\postcss\lib\lazy-result.js:192:30)
+    at LazyResult.then (C:\projects\v2\zacldev\node_modules\vite\node
+_modules\postcss\lib\lazy-result.js:436:17)[39m

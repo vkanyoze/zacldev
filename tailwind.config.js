@@ -1,31 +1,22 @@
 /** @type {import('tailwindcss').Config} */
-const colors = require('tailwindcss/colors')
 module.exports = {
   content: [
     "./resources/**/*.blade.php",
     "./resources/**/*.js",
+    "./resources/**/*.vue",
   ],
   theme: {
-      extend: {
-            fontFamily: {
-        'sans': ['Circular', 'Helvetica', 'Arial', 'sans-serif']
-      },
+    extend: {
       colors: {
-      transparent: 'transparent',
-      current: 'currentColor',
-      black: colors.black,
-      white: colors.white,
-      gray: colors.slate,
-      green: colors.emerald,
-      purple: colors.violet,
-      yellow: colors.amber,
-      pink: colors.fuchsia,
-      "custom-gray":"#414166",
-      "lighter-gray":"#7D7D95",
-      "custom-green":"#3AC273",
-      "dark-green":"#3E7B57",
-    },
+        'custom-purple': '#4A1A4A',
+        'custom-green': '#10B981',
+        'custom-gray': '#6B7280',
+        'light-blue': '#3B82F6',
+        'light-green': '#10B981',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+  ],
 }

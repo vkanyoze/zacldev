@@ -1,20 +1,22 @@
 @tailwind base;
 @tailwind components;
-@layer base {
-  @font-face {
-    font-family: Circular;
-    font-weight: 400;
-    src: url(/fonts/CircularSpotifyText-Light.ttf) format("tff");
-  }
-  @font-face {
-    font-family: Circular;
-    font-weight: 500;
-    src: url(/fonts/lineto-circular-book.ttf) format("ttf");
-  }
-  @font-face {
-    font-family: Circular;
-    font-weight: 700;
-    src: url(/fonts/lineto-circular-bold.ttf) format("ttf");
-  }
-}
 @tailwind utilities;
+
+/* Toggle Switch */
+.toggle-checkbox:checked {
+    @apply right-0 border-green-400;
+    right: 0;
+    border-color: #68D391;
+}
+
+.toggle-checkbox:checked + .toggle-label {
+    @apply bg-green-400;
+}
+
+.toggle-label {
+    transition: all 0.3s ease-in-out;
+}
+
+.toggle-checkbox {
+    transition: all 0.3s ease-in-out;
+}

@@ -2,10 +2,14 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Database\Seeders\AdminUserSeeder;
+use Database\Seeders\TestAdminSeeder;
+use Database\Seeders\DemoUsersSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,18 +18,31 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
+        // Create a demo user with only the fields that exist in the schema
+        $demoUser = [
+            'id' => (string) Str::uuid(),
+            'email' => 'demo@example.com',
+            'password' => Hash::make('SecurePassword123!'),
+            'email_verified_at' => now(),
+            'is_email_verified' => true,
+            'remember_token' => Str::random(10),
+        ];
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        // Remove any fields that don't exist in the database
+        $columns = Schema::getColumnListing('users');
+        $demoUser = array_intersect_key($demoUser, array_flip($columns));
 
-        // Create a test user for development
-        User::create([
-            'email' => 'test@example.com',
-            'password' => Hash::make('password123'),
-            'is_email_verified' => 1,
+        User::updateOrCreate(
+            ['email' => 'demo@example.com'],
+            $demoUser
+        );
+
+        $this->call([
+            AdminUserSeeder::class,
+            TestAdminSeeder::class,
+            DemoUsersSeeder::class,
+            DemoDataSeeder::class,
+            // Add other seeders here
         ]);
     }
 }

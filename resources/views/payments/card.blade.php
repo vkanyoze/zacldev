@@ -28,13 +28,32 @@
                     @endif
         </div>
     </div>
-    <div>
-    <label class="block text-custom-gray font-bold mt-3  max-w-2xl" for="card_number">Card Number<label>
-            <input type="text" placeholder="Card  Number" max="16" value="{{ old('card_number') }}"
-                name="card_number" required  class="mt-2 w-full p-2 rounded border {{ $errors->has('card_number') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal">
-                @if ($errors->has('card_number'))
-                    <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('card_number') }}</span>
-                @endif
+    <div class="relative">
+        <label class="block text-custom-gray font-bold mt-3 max-w-2xl" for="card_number">Card Number<label>
+        <div class="relative">
+            <input type="password" 
+                   id="card_number"
+                   name="card_number"
+                   placeholder="•••• •••• •••• ••••" 
+                   maxlength="19"
+                   value=""
+                   required  
+                   class="card-number-input mt-2 w-full p-2 pr-10 rounded border {{ $errors->has('card_number') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-mono"
+                   oninput="formatCardNumber(this)"
+                   autocomplete="cc-number">
+            <button type="button" 
+                    onclick="toggleCardVisibility(this, 'card_number')" 
+                    class="absolute inset-y-0 right-0 flex items-center pr-3 mt-2 text-gray-600 hover:text-gray-800"
+                    aria-label="Toggle card number visibility">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            </button>
+        </div>
+        @if ($errors->has('card_number'))
+            <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('card_number') }}</span>
+        @endif
     </div>
     <div>
     <label class="block text-custom-gray font-bold mt-3  max-w-2xl" for="card_number">Billing Address<label>
@@ -120,4 +139,88 @@
 </form>
     </div>
 </main>
+
+@push('styles')
+<style>
+/* Card number input styling */
+.card-number-input {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+    font-size: 16px;
+    padding-left: 10px;
+}
+
+/* Password field specific styles */
+input[type="password"].card-number-input {
+    letter-spacing: 2px;
+}
+
+/* Eye icon positioning */
+.relative button svg {
+    position: relative;
+    top: 2px;
+}
+
+/* Hide the hide icon by default */
+#eye-icon-hide-card_number {
+    display: none;
+}
+
+/* Show/hide eye icons based on state */
+.hidden {
+    display: none;
+}
+</style>
+@endpush
+
+@push('scripts')
+<script>
+function formatCardNumber(input) {
+    // Remove all non-digits
+    let value = input.value.replace(/\D/g, '');
+    
+    // Limit to 16 digits
+    value = value.substring(0, 16);
+    
+    // Add space every 4 digits
+    let formattedValue = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+    
+    // Update the input value
+    if (input.value !== formattedValue) {
+        input.value = formattedValue;
+    }
+}
+
+function toggleCardVisibility(button, inputId) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        button.innerHTML = `
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+            </svg>`;
+    } else {
+        input.type = 'password';
+        button.innerHTML = `
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const cardInput = document.getElementById('card_number');
+    if (cardInput) {
+        // Format on paste
+        cardInput.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                formatCardNumber(this);
+            }, 0);
+        });
+    }
+});
+</script>
+@endpush
+
 @endsection
