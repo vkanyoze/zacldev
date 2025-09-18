@@ -30,8 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::get('/user', 'App\Http\Controllers\API\AuthController@user');
 
     // Payments
-    Route::apiResource('payments', PaymentController::class);
-    Route::post('payments/{payment}/refund', [PaymentController::class, 'refund'])->name('payments.refund');
+    Route::apiResource('payments', PaymentController::class)->names('api.payments');
+    Route::post('payments/{payment}/refund', [PaymentController::class, 'refund'])->name('api.payments.refund');
     
     // Cards
     // Route::apiResource('cards', 'App\Http\Controllers\API\CardController');
