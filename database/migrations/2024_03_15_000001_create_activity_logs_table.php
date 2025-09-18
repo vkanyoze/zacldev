@@ -10,13 +10,16 @@ return new class extends Migration
     {
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->uuid('user_id');
             $table->string('action');
             $table->text('description')->nullable();
             $table->text('data')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->timestamps();
+            
+            // Add foreign key constraint with proper column type
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
