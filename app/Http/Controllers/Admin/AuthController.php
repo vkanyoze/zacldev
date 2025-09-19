@@ -75,4 +75,37 @@ class AuthController extends Controller
 
         return back()->with('success', 'Profile updated successfully.');
     }
+
+    public function showRegistrationForm()
+    {
+        return view('admin.auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:admins',
+            'password' => 'required|string|min:8|confirmed',
+            'avatar' => 'nullable|image|max:2048',
+        ]);
+
+        $admin = Admin::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        if ($request->hasFile('avatar')) {
+            $admin->avatar = $request->file('avatar')->store('admin/avatars', 'public');
+            $admin->save();
+        }
+
+        // Assign default role if you have roles set up
+        // $admin->assignRole('admin');
+
+        Auth::guard('admin')->login($admin);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Admin account created successfully!');
+    }
 }
