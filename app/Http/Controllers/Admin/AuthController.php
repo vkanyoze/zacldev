@@ -104,8 +104,11 @@ class AuthController extends Controller
         // Assign default role if you have roles set up
         // $admin->assignRole('admin');
 
-        Auth::guard('admin')->login($admin);
-
-        return redirect()->route('admin.dashboard')->with('success', 'Admin account created successfully!');
+        // Option 1: Auto-login and redirect to dashboard
+        // Auth::guard('admin')->login($admin);
+        // return redirect()->route('admin.dashboard')->with('success', 'Admin account created successfully!');
+        
+        // Option 2: Just create account and redirect to login
+        return redirect()->route('admin.login')->with('success', 'Admin account created successfully! Please login to continue.');
     }
 }

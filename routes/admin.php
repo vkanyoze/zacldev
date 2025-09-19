@@ -40,7 +40,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
 
         // Payment Management
-        Route::prefix('payments')->name('admin.payments.')->group(function () {
+        Route::prefix('payments')->name('payments.')->group(function () {
             Route::get('/', [DashboardController::class, 'payments'])->name('index');
             Route::get('/{payment}', [DashboardController::class, 'showPayment'])->name('show');
             Route::get('/data', [DashboardController::class, 'paymentsDataTable'])->name('datatable');
