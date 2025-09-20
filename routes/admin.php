@@ -23,10 +23,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
         
+        // ML Analytics API
+        Route::prefix('api/analytics')->name('api.analytics.')->group(function () {
+            Route::get('/historical-data', [DashboardController::class, 'getHistoricalData'])->name('historical-data');
+            Route::post('/retrain-models', [DashboardController::class, 'retrainModels'])->name('retrain-models');
+        });
+        
         
         // User Management
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', [DashboardController::class, 'users'])->name('index');
+            Route::get('/create', [DashboardController::class, 'createUser'])->name('create');
+            Route::post('/', [DashboardController::class, 'storeUser'])->name('store');
             Route::get('/{user}', [DashboardController::class, 'showUser'])->name('show');
             Route::get('/{user}/edit', [DashboardController::class, 'editUser'])->name('edit');
             Route::put('/{user}', [DashboardController::class, 'updateUser'])->name('update');

@@ -8,6 +8,8 @@ use App\Models\Payment;
 use App\Models\Card;
 use App\Models\Admin;
 use App\Models\ActivityLog;
+use App\Services\MLPredictionService;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -110,8 +112,9 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Analytics data
-        $analytics = $this->getAdminAnalytics();
+        // ML-powered Analytics data
+        $mlService = new MLPredictionService();
+        $analytics = $mlService->getPredictions();
 
         return view('admin.dashboard', compact(
             'stats',
@@ -321,6 +324,42 @@ class DashboardController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
+    public function createUser()
+    {
+        return view('admin.users.create');
+    }
+
+    public function storeUser(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:100',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'phone' => $validated['phone'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'state' => $validated['state'] ?? null,
+            'postal_code' => $validated['postal_code'] ?? null,
+            'country' => $validated['country'] ?? null,
+            'is_email_verified' => 1, // Admin-created users are auto-verified
+        ]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User created successfully!');
+    }
+
     public function payments()
     {
         $payments = Payment::with('user')
@@ -328,6 +367,31 @@ class DashboardController extends Controller
             ->paginate(20);
             
         return view('admin.payments.index', compact('payments'));
+    }
+
+    public function getHistoricalData()
+    {
+        $mlService = new MLPredictionService();
+        $predictions = $mlService->getPredictions();
+        
+        return response()->json([
+            'revenue' => $predictions['historical_data']['revenue'],
+            'users' => $predictions['historical_data']['users'],
+            'payments' => $predictions['historical_data']['payments'],
+            'last_updated' => $predictions['last_updated']
+        ]);
+    }
+
+    public function retrainModels()
+    {
+        $mlService = new MLPredictionService();
+        $mlService->retrainModels();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'ML models retrained successfully',
+            'timestamp' => now()->toISOString()
+        ]);
     }
 
     public function showPayment(Payment $payment)
