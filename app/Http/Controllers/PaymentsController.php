@@ -67,7 +67,8 @@ class PaymentsController extends Controller
 
         $title = 'select payment';
         $countries = config('countries');
-        return view('payments.cards', compact('title', 'stepOne', 'countries'));
+        $cards = Card::where('user_id', Auth::id())->get();
+        return view('payments.cards', compact('title', 'stepOne', 'countries', 'cards'));
     }
 
     /**
@@ -89,7 +90,7 @@ class PaymentsController extends Controller
         $phonenumber = $formData['phone_number'];
         $cardNumber = $formData['card_number'];
         $expiryDate = $formData['expiry_date'];
-        $cvv = $formData['cvv'];
+        $cvv = $formData['cvv'] ?? null;
         $paymentService = new CyberSourcePaymentService($fullName, $address, $city, $postalCode, $country, $email, $phonenumber,$cardNumber,$cvv, $expiryDate, $amountSpend);
         $results = $paymentService->createPayment();
 

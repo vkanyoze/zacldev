@@ -94,7 +94,7 @@ class CardsController extends Controller
         $phonenumber = $card->phone_number;
         $cardNumber = $card->card_number;
         $expiryDate = $card->expiry_date;
-        $cvv = $request->session()->get('cvv');
+        $cvv = $request->session()->get('cvv') ?? null;
         $paymentService = new CyberSourcePaymentService($fullName, $address, $city, $postalCode, $country, $email, $phonenumber,$cardNumber,$cvv, $expiryDate, $amountSpend);
         $results = $paymentService->createPayment();
 

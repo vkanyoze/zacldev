@@ -322,14 +322,103 @@ class CustomAuthController extends Controller
         if(Auth::check()){
             $title = 'Dashboard';
             $user = Auth::user();
-            // Example statistics (replace with real queries as needed)
+            
+            // Basic statistics
             $paymentsCount = $user->payments()->count();
             $cardsCount = $user->cards()->count();
             $lastPayment = $user->payments()->latest()->first();
             $totalSpent = $user->payments()->sum('amount_spend');
-            return view('dashboard', compact('title', 'user', 'paymentsCount', 'cardsCount', 'lastPayment', 'totalSpent'));
+            
+            // Analytics data
+            $analytics = $this->getUserAnalytics($user);
+            
+            return view('dashboard', compact('title', 'user', 'paymentsCount', 'cardsCount', 'lastPayment', 'totalSpent', 'analytics'));
         }
         return redirect("login")->withSuccess('You are not allowed to access');
+    }
+    
+    private function getUserAnalytics($user)
+    {
+        $now = now();
+        $lastWeek = $now->copy()->subWeek();
+        $lastMonth = $now->copy()->subMonth();
+        
+        // Recent payments for trend analysis
+        $recentPayments = $user->payments()
+            ->where('created_at', '>=', $lastWeek)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        // Payment trends
+        $weeklySpending = $recentPayments->sum('amount_spend');
+        $monthlySpending = $user->payments()
+            ->where('created_at', '>=', $lastMonth)
+            ->sum('amount_spend');
+            
+        // Calculate growth
+        $previousWeekSpending = $user->payments()
+            ->whereBetween('created_at', [$lastWeek->copy()->subWeek(), $lastWeek])
+            ->sum('amount_spend');
+            
+        $spendingGrowth = $previousWeekSpending > 0 
+            ? round((($weeklySpending - $previousWeekSpending) / $previousWeekSpending) * 100, 1)
+            : 0;
+            
+        // Payment frequency analysis
+        $paymentFrequency = $recentPayments->count();
+        $avgPaymentAmount = $recentPayments->count() > 0 
+            ? $recentPayments->avg('amount_spend') 
+            : 0;
+            
+        // Success rate
+        $totalPayments = $user->payments()->count();
+        $successfulPayments = $user->payments()->where('status', 'completed')->count();
+        $successRate = $totalPayments > 0 
+            ? round(($successfulPayments / $totalPayments) * 100, 1)
+            : 0;
+            
+        // Peak day analysis
+        $dayOfWeekCounts = $recentPayments->groupBy(function($payment) {
+            return $payment->created_at->format('l');
+        })->map->count();
+        
+        $peakDay = $dayOfWeekCounts->isNotEmpty() 
+            ? $dayOfWeekCounts->sortDesc()->keys()->first()
+            : 'No data';
+            
+        // Next 7 days prediction (simple linear projection)
+        $dailyAverage = $weeklySpending / 7;
+        $nextWeekPrediction = $dailyAverage * 7;
+        
+        // Payment patterns
+        $hourlyPatterns = $recentPayments->groupBy(function($payment) {
+            return $payment->created_at->format('H');
+        })->map->count();
+        
+        $peakHour = $hourlyPatterns->isNotEmpty() 
+            ? $hourlyPatterns->sortDesc()->keys()->first() . ':00'
+            : 'No data';
+            
+        return [
+            'revenue_forecast' => [
+                'next_7_days' => round($nextWeekPrediction, 2),
+                'confidence' => min(95, max(60, 100 - abs($spendingGrowth))),
+                'trend' => $spendingGrowth > 5 ? 'Increasing' : ($spendingGrowth < -5 ? 'Decreasing' : 'Stable'),
+                'growth_percentage' => $spendingGrowth
+            ],
+            'payment_activity' => [
+                'expected_payments' => max(1, round($paymentFrequency * 1.1)), // Slight increase prediction
+                'peak_day' => $peakDay,
+                'success_rate' => $successRate,
+                'avg_amount' => round($avgPaymentAmount, 2)
+            ],
+            'insights' => [
+                'spending_growth' => $spendingGrowth,
+                'peak_hour' => $peakHour,
+                'total_this_week' => round($weeklySpending, 2),
+                'total_this_month' => round($monthlySpending, 2)
+            ]
+        ];
     }
     
     public function signOut() {

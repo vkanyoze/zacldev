@@ -17,13 +17,22 @@
     
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gradient-to-br from-slate-700 to-slate-900 min-h-screen flex items-center justify-center px-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 sm:p-8">
-        <!-- Logo -->
-        <div class="flex justify-center mb-6">
-            <a href="https://www.zacl.co.zm/" class="flex justify-center">
-                <img src="/front-logo.png" alt="Zambia AIRPORTS Corporation Limited" class="h-16 w-auto" />
-            </a>
+<body class="font-sans antialiased bg-blue-600 min-h-screen flex items-center justify-center px-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+        <!-- Logo and Branding -->
+        <div class="flex items-center justify-center mb-8">
+            <div class="flex items-center space-x-3">
+                <!-- Logo with green triangles -->
+                <div class="relative">
+                    <div class="w-8 h-8 bg-green-500 rounded-sm transform rotate-45"></div>
+                    <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-sm transform rotate-45"></div>
+                </div>
+                <div class="text-left">
+                    <div class="text-sm text-gray-600">Zambia</div>
+                    <div class="text-2xl font-bold text-green-600">AIRPORTS</div>
+                    <div class="text-sm text-gray-600">Corporation Limited</div>
+                </div>
+            </div>
         </div>
 
         <!-- Session Status -->

@@ -86,12 +86,18 @@ class CyberSourcePaymentService
     }
 
     private function getCardInformation(){
-        $paymentInformationCard = new Ptsv2paymentsPaymentInformationCard([
+        $cardData = [
                 "number" => $this->cardNumber,
                 "expirationMonth" => $this->expirationMonth,
-                "expirationYear" => $this->expirationYear,
-                "securityCode" => $this->securityCode
-        ]);
+                "expirationYear" => $this->expirationYear
+        ];
+        
+        // Only include securityCode if it's provided
+        if (!empty($this->securityCode)) {
+            $cardData["securityCode"] = $this->securityCode;
+        }
+        
+        $paymentInformationCard = new Ptsv2paymentsPaymentInformationCard($cardData);
 
         return  new Ptsv2paymentsPaymentInformation([
                 "card" => $paymentInformationCard

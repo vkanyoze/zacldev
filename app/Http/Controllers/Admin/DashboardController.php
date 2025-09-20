@@ -110,6 +110,9 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Analytics data
+        $analytics = $this->getAdminAnalytics();
+
         return view('admin.dashboard', compact(
             'stats',
             'systemStatus',
@@ -117,7 +120,8 @@ class DashboardController extends Controller
             'recentPayments',
             'recentUsers',
             'notifications',
-            'unreadNotificationsCount'
+            'unreadNotificationsCount',
+            'analytics'
         ));
     }
 
@@ -138,6 +142,88 @@ class DashboardController extends Controller
         if ($lastMonth === 0) return $currentMonth > 0 ? 100 : 0;
         
         return round((($currentMonth - $lastMonth) / $lastMonth) * 100, 2);
+    }
+
+    protected function getAdminAnalytics()
+    {
+        $now = now();
+        $lastWeek = $now->copy()->subWeek();
+        $lastMonth = $now->copy()->subMonth();
+        $nextWeek = $now->copy()->addWeek();
+        
+        // Revenue analytics
+        $currentMonthRevenue = Payment::where('status', 'completed')
+            ->where('created_at', '>=', $lastMonth)
+            ->sum('amount_spend');
+            
+        $previousMonthRevenue = Payment::where('status', 'completed')
+            ->whereBetween('created_at', [$lastMonth->copy()->subMonth(), $lastMonth])
+            ->sum('amount_spend');
+            
+        $weeklyRevenue = Payment::where('status', 'completed')
+            ->where('created_at', '>=', $lastWeek)
+            ->sum('amount_spend');
+            
+        $revenueGrowth = $previousMonthRevenue > 0 
+            ? round((($currentMonthRevenue - $previousMonthRevenue) / $previousMonthRevenue) * 100, 1)
+            : 0;
+            
+        // User analytics
+        $currentMonthUsers = User::where('created_at', '>=', $lastMonth)->count();
+        $previousMonthUsers = User::whereBetween('created_at', [$lastMonth->copy()->subMonth(), $lastMonth])->count();
+        $userGrowth = $previousMonthUsers > 0 
+            ? round((($currentMonthUsers - $previousMonthUsers) / $previousMonthUsers) * 100, 1)
+            : 0;
+            
+        // Payment analytics
+        $weeklyPayments = Payment::where('created_at', '>=', $lastWeek)->count();
+        $monthlyPayments = Payment::where('created_at', '>=', $lastMonth)->count();
+        $paymentGrowth = $weeklyPayments > 0 
+            ? round((($monthlyPayments / 4) - $weeklyPayments) / $weeklyPayments * 100, 1)
+            : 0;
+            
+        // Predictions based on trends
+        $nextWeekRevenuePrediction = $weeklyRevenue * 1.1; // 10% growth assumption
+        $nextWeekUsersPrediction = max(1, round($currentMonthUsers / 4 * 1.1));
+        $nextWeekPaymentsPrediction = max(1, round($weeklyPayments * 1.1));
+        
+        // System load estimation
+        $avgPaymentsPerDay = $weeklyPayments / 7;
+        $peakLoadPercentage = min(95, max(20, ($avgPaymentsPerDay / 10) * 100));
+        
+        // Retention rate calculation
+        $totalUsers = User::count();
+        $activeUsers = User::where('last_seen', '>=', now()->subDays(30))->count();
+        $retentionRate = $totalUsers > 0 ? round(($activeUsers / $totalUsers) * 100, 1) : 0;
+        
+        return [
+            'revenue_forecast' => [
+                'next_7_days' => round($nextWeekRevenuePrediction, 2),
+                'current_month' => round($currentMonthRevenue, 2),
+                'growth_percentage' => $revenueGrowth,
+                'confidence' => min(95, max(60, 100 - abs($revenueGrowth)))
+            ],
+            'user_growth' => [
+                'expected_new_users' => $nextWeekUsersPrediction,
+                'current_active' => $activeUsers,
+                'growth_percentage' => $userGrowth,
+                'retention_rate' => $retentionRate
+            ],
+            'payment_volume' => [
+                'expected_payments' => $nextWeekPaymentsPrediction,
+                'current_weekly' => $weeklyPayments,
+                'growth_percentage' => $paymentGrowth
+            ],
+            'system_performance' => [
+                'peak_load' => round($peakLoadPercentage, 1),
+                'status' => $peakLoadPercentage > 80 ? 'High' : ($peakLoadPercentage > 60 ? 'Medium' : 'Low')
+            ],
+            'business_insights' => [
+                'revenue_trend' => $revenueGrowth > 5 ? 'Growing' : ($revenueGrowth < -5 ? 'Declining' : 'Stable'),
+                'user_trend' => $userGrowth > 5 ? 'Growing' : ($userGrowth < -5 ? 'Declining' : 'Stable'),
+                'payment_trend' => $paymentGrowth > 5 ? 'Growing' : ($paymentGrowth < -5 ? 'Declining' : 'Stable')
+            ]
+        ];
     }
 
     protected function getRevenueGrowth()

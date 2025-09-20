@@ -2,8 +2,8 @@
 
 @section('content')
 <div class="flex flex-col items-center">
-    <h2 class="text-2xl sm:text-3xl font-bold text-center text-black mb-2">Admin Login</h2>
-    <p class="text-center text-black text-sm mb-6 sm:mb-8">Sign in to your admin account</p>
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">Welcome Back</h2>
+    <p class="text-center text-gray-600 text-sm mb-8">Sign in to manage your payments securely.</p>
 </div>
 
         @if ($errors->any())
@@ -29,13 +29,13 @@
 <form method="POST" action="{{ route('admin.login') }}" class="space-y-6">
     @csrf
     <div>
-        <label class="block text-black font-medium mb-2" for="email">Email Address</label>
+        <label class="block text-gray-700 font-medium mb-2" for="email">Email</label>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-envelope text-slate-600"></i>
+                <i class="fas fa-envelope text-purple-600"></i>
             </div>
-            <input type="email" placeholder="Email address" name="email" autofocus
-                class="w-full p-3 pl-10 rounded-lg border-2 {{ $errors->has('email') ? 'border-red-500' : 'border-slate-300' }} focus:outline-none focus:border-slate-600 text-gray-900 placeholder-gray-400"
+            <input type="email" placeholder="Email" name="email" autofocus
+                class="w-full p-3 pl-10 rounded-lg border-2 {{ $errors->has('email') ? 'border-red-500' : 'border-blue-300' }} focus:outline-none focus:border-blue-500 text-gray-900 placeholder-gray-400"
                 value="{{ old('email') }}">
         </div>
         @if ($errors->has('email'))
@@ -43,13 +43,13 @@
         @endif
     </div>
     <div>
-        <label class="block text-black font-medium mb-2" for="password">Password</label>
+        <label class="block text-gray-700 font-medium mb-2" for="password">Password</label>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-lock text-slate-600"></i>
+                <i class="fas fa-lock text-purple-600"></i>
             </div>
             <input id="password" name="password" type="password" autocomplete="off" placeholder="Password"
-                class="w-full p-3 pl-10 pr-10 rounded-lg border-2 {{ $errors->has('password') ? 'border-red-500' : 'border-slate-300' }} focus:outline-none focus:border-slate-600 text-gray-900 placeholder-gray-400">
+                class="w-full p-3 pl-10 pr-10 rounded-lg border-2 {{ $errors->has('password') ? 'border-red-500' : 'border-blue-300' }} focus:outline-none focus:border-blue-500 text-gray-900 placeholder-gray-400">
             <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button type="button" onclick="togglePassword()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
                     <i id="togglePasswordIcon" class="fas fa-eye"></i>
@@ -62,16 +62,23 @@
     </div>
 
     <div class="flex items-center justify-between">
-        <label class="flex items-center text-sm text-black">
-            <input type="checkbox" name="remember" class="mr-2 rounded border-gray-300 text-slate-600 focus:ring-slate-600">
+        <label class="flex items-center text-sm text-gray-700">
+            <input type="checkbox" name="remember" class="mr-2 rounded border-gray-300 text-purple-600 focus:ring-purple-600">
             Remember me
         </label>
-        <a href="{{ route('admin.password.request') }}" class="text-slate-600 hover:underline text-sm">Forgot password?</a>
+        <!-- <a href="{{ route('admin.password.request') }}" class="text-purple-600 hover:underline text-sm">Forgot password?</a> -->
     </div>
-    <button type="submit" class="w-full py-3 rounded-lg bg-gradient-to-r from-slate-600 to-slate-700 text-white font-medium text-lg hover:from-slate-700 hover:to-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105">
-        Sign in to admin
+    <button type="submit" class="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold text-lg hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105">
+        Continue
     </button>
 </form>
+
+<!-- Don't have an account section -->
+<!-- <div class="mt-6 text-center">
+    <p class="text-sm text-gray-600">Don't have an account? 
+        <a href="{{ route('admin.register') }}" class="text-purple-600 hover:underline font-medium">Create Account</a>
+    </p>
+</div> -->
 
 <script>
     function togglePassword() {

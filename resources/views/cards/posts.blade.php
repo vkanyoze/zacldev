@@ -89,7 +89,7 @@
         </span>
       </span>
     </label>
-    <input type="text" maxlength="4" minlength="3" pattern="\\d{3,4}" id="cvv" name="cvv" required placeholder="CVV" class="w-full p-2 rounded border border-custom-green focus:outline-none focus:border-blue-600 font-normal">
+    <input type="text" maxlength="4" id="cvv" name="cvv" placeholder="CVV" class="w-full p-2 rounded border border-custom-green focus:outline-none focus:border-blue-600 font-normal">
   </div>
 </div>
     <div>
