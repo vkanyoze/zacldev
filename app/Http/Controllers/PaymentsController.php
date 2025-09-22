@@ -65,10 +65,9 @@ class PaymentsController extends Controller
         $stepOne['service_type'] = $serviceTypesString;
         $request->session()->put('step_one', $stepOne);
 
-        $title = 'select payment';
+        $title = 'Enter Card Details';
         $countries = config('countries');
-        $cards = Card::where('user_id', Auth::id())->get();
-        return view('payments.cards', compact('title', 'stepOne', 'countries', 'cards'));
+        return view('payments.card-details', compact('title', 'stepOne', 'countries'));
     }
 
     /**
@@ -78,37 +77,55 @@ class PaymentsController extends Controller
      */
     public function process(Request $request)
     {
-        $formData = $request->session()->get('step_one');
-        $amountSpend = $formData['amount_spend'];
-        $formData = $request->session()->get('step_two');
-        $fullName = $formData['full_name'];
-        $address = $formData['address'];
-        $city = $formData['city'];
-        $postalCode = $formData['postal_code'];
-        $country = $formData['country'];
-        $email = $formData['email_address'];
-        $phonenumber = $formData['phone_number'];
-        $cardNumber = $formData['card_number'];
-        $expiryDate = $formData['expiry_date'];
-        $cvv = $formData['cvv'] ?? null;
-        $paymentService = new CyberSourcePaymentService($fullName, $address, $city, $postalCode, $country, $email, $phonenumber,$cardNumber,$cvv, $expiryDate, $amountSpend);
+        // Validate card details
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'card_number' => 'required|digits:16',
+            'expiry_month' => 'required|numeric|min:1|max:12',
+            'expiry_year' => 'required|numeric|min:' . date('Y'),
+            'cvv' => 'required|digits:3',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'state' => 'required|string|max:255',
+            'country' => ['required', Rule::in(array_keys(config('countries')))],
+            'postal_code' => 'nullable|string|max:20',
+            'email_address' => 'required|email',
+            'phone_number' => 'required|string|max:20'
+        ]);
+
+        // Validate that card is VISA (starts with 4)
+        $cardNumber = $request->card_number;
+        if (!str_starts_with($cardNumber, '4')) {
+            return redirect()->back()
+                ->withErrors(['card_number' => 'We only accept VISA cards. Please use a VISA card to complete your payment.'])
+                ->withInput();
+        }
+
+        // Get step one data
+        $stepOneData = $request->session()->get('step_one');
+        $amountSpend = $stepOneData['amount_spend'];
+
+        // Prepare card data for payment service
+        $fullName = $request->first_name . ' ' . $request->last_name;
+        $address = $request->address;
+        $city = $request->city;
+        $postalCode = $request->postal_code;
+        $country = $request->country;
+        $email = $request->email_address;
+        $phonenumber = $request->phone_number;
+        $cardNumber = $request->card_number;
+        $expiryDate = $request->expiry_month . '/' . $request->expiry_year;
+        $cvv = $request->cvv;
+
+        // Process payment
+        $paymentService = new CyberSourcePaymentService($fullName, $address, $city, $postalCode, $country, $email, $phonenumber, $cardNumber, $cvv, $expiryDate, $amountSpend);
         $results = $paymentService->createPayment();
 
         if ($results['status'] === 'ERROR'){
            return redirect()->route('payments.index')->with("error", $results['message']);
         }
 
-        // Create card record
-        $sam = $request->session()->get('step_two');
-        $sam['name'] = explode(' ',$sam['full_name'])[0];
-        $sam['surname'] = explode(' ',$sam['full_name'])[1];
-        $sam['state'] = ' ';
-        $sam['user_id'] = auth()->user()->id;
-
-        $card = Card::create($sam);
-        
-        // Get step one data for payment
-        $stepOneData = $request->session()->get('step_one');
         
         // Prepare payment data
         $paymentData = [
@@ -121,11 +138,11 @@ class PaymentsController extends Controller
             'reconciliaton_reference' => $results['reconciliationId'] ?? 'REC_' . uniqid(),
             'status' => $results['status'],
             'user_id' => auth()->user()->id,
-            'card_id' => $card->id,
+            'card_id' => $card ? $card->id : null,
             'payment' => 'completed',
             'currency' => $stepOneData['currency'] ?? 'USD',
-            'name' => $sam['name'],
-            'surname' => $sam['surname']
+            'name' => explode(' ', $request->cardholder_name)[0],
+            'surname' => explode(' ', $request->cardholder_name)[1] ?? ''
         ];
 
         // Create payment record
@@ -135,6 +152,27 @@ class PaymentsController extends Controller
         $request->session()->forget(['step_one', 'step_two']);
 
         return redirect()->route('payments.index')->with("success", 'Payment processed successfully! Transaction ID: ' . $paymentData['transaction_reference']);
+    }
+
+    /**
+     * Get card type based on card number
+     */
+    private function getCardType($cardNumber)
+    {
+        $firstDigit = substr($cardNumber, 0, 1);
+        $firstTwoDigits = substr($cardNumber, 0, 2);
+        
+        if ($firstDigit == '4') {
+            return 'Visa';
+        } elseif ($firstTwoDigits >= '51' && $firstTwoDigits <= '55') {
+            return 'Mastercard';
+        } elseif ($firstTwoDigits == '34' || $firstTwoDigits == '37') {
+            return 'American Express';
+        } elseif ($firstTwoDigits == '30' || $firstTwoDigits == '36' || $firstTwoDigits == '38') {
+            return 'Diners Club';
+        } else {
+            return 'Unknown';
+        }
     }
 
     /**

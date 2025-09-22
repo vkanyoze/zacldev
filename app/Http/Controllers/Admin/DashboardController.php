@@ -583,7 +583,10 @@ class DashboardController extends Controller
             'session_timeout' => \App\Models\Setting::get('session_timeout', 120),
         ];
 
-        return view('admin.settings', compact('settings'));
+        // Get password policy settings
+        $passwordPolicy = \App\Services\PasswordPolicyService::getSettings();
+
+        return view('admin.settings', compact('settings', 'passwordPolicy'));
     }
 
     public function updateSettings(Request $request)
@@ -601,19 +604,46 @@ class DashboardController extends Controller
             'auto_approve_payments' => 'boolean',
             'require_email_verification' => 'boolean',
             'session_timeout' => 'required|integer|min:1|max:1440',
+            // Password policy validation
+            'password_policy_enabled' => 'boolean',
+            'password_policy_min_length' => 'required|integer|min:4|max:50',
+            'password_policy_require_uppercase' => 'boolean',
+            'password_policy_require_lowercase' => 'boolean',
+            'password_policy_require_numbers' => 'boolean',
+            'password_policy_require_special_characters' => 'boolean',
         ]);
 
-        // Save settings to database
-        foreach ($validated as $key => $value) {
-            $type = 'string';
-            if (is_bool($value)) {
-                $type = 'boolean';
-            } elseif (is_numeric($value)) {
-                $type = 'integer';
+        // Save general settings to database
+        $generalSettings = [
+            'site_name', 'contact_email', 'maintenance_mode', 'min_payment_amount',
+            'max_payment_amount', 'currency', 'payment_timeout', 'email_notifications',
+            'sms_notifications', 'auto_approve_payments', 'require_email_verification', 'session_timeout'
+        ];
+
+        foreach ($generalSettings as $key) {
+            if (isset($validated[$key])) {
+                $type = 'string';
+                if (is_bool($validated[$key])) {
+                    $type = 'boolean';
+                } elseif (is_numeric($validated[$key])) {
+                    $type = 'integer';
+                }
+                
+                \App\Models\Setting::set($key, $validated[$key], $type);
             }
-            
-            \App\Models\Setting::set($key, $value, $type);
         }
+
+        // Save password policy settings
+        $passwordPolicyData = [
+            'enabled' => $validated['password_policy_enabled'] ?? false,
+            'min_length' => $validated['password_policy_min_length'],
+            'require_uppercase' => $validated['password_policy_require_uppercase'] ?? false,
+            'require_lowercase' => $validated['password_policy_require_lowercase'] ?? false,
+            'require_numbers' => $validated['password_policy_require_numbers'] ?? false,
+            'require_special_characters' => $validated['password_policy_require_special_characters'] ?? false,
+        ];
+
+        \App\Services\PasswordPolicyService::updateSettings($passwordPolicyData);
 
         return back()->with('success', 'Settings updated successfully.');
     }

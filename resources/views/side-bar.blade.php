@@ -17,15 +17,6 @@
       </a>
     </li>
     <li class="mt-2 relative">
-       <a class="flex items-center text-sm py-3 px-6 h-12 overflow-hidden {{ $activeNavItem === 'cards' ? 'bg-custom-green text-white  hover:bg-custom-green  font-bold' : 'text-white hover:text-gray-900 hover:bg-gray-100' }}    text-ellipsis whitespace-nowrap hover:text-gray-900hover:font-bold transition duration-300 ease-in-out" href="{{ route('cards.index') }}" data-mdb-ripple="true" data-mdb-ripple-color="dark">
-       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 hr-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-            <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
-          </svg>
-        <span>Cards</span>
-      </a>
-    </li>
-    <li class="mt-2 relative">
        <a class="flex items-center text-sm py-3 px-6 h-12 overflow-hidden {{ $activeNavItem === 'email' ? 'bg-custom-green text-white  hover:bg-custom-green  font-bold' : 'text-white hover:text-gray-900 hover:bg-gray-100' }}    text-ellipsis whitespace-nowrap hover:text-gray-900 hover:font-bold transition duration-300 ease-in-out"  href="{{ route('user.update') }}" data-mdb-ripple="true" data-mdb-ripple-color="dark">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 hr-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />

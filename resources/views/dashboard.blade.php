@@ -141,9 +141,9 @@
                     <i class="fas fa-credit-card mr-2"></i>
                     Manage Payments
                 </a>
-                <a href="{{ route('cards.index') }}" class="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-indigo-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-semibold text-center">
-                    <i class="fas fa-wallet mr-2"></i>
-                    Manage Cards
+                <a href="{{ route('payments.create') }}" class="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-indigo-700 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-semibold text-center">
+                    <i class="fas fa-plus mr-2"></i>
+                    New Payment
                 </a>
             </div>
         </div>

@@ -19,6 +19,7 @@
         "@tensorflow/tfjs-vis": "^1.5.1",
         "axios": "^1.1.2",
         "chart.js": "^4.5.0",
+        "firebase": "^12.3.0",
         "laravel-echo": "^1.15.3",
         "lodash": "^4.17.21",
         "pusher-js": "^8.4.0",

@@ -17,13 +17,26 @@
                     <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('invoice_reference') }}</span>
                 @endif
     </div>
-    <div>
-    <label class="block text-custom-gray font-bold mt-3  max-w-2xl" for="amount_spend">Amount (USD)<label>
-            <input type="number" placeholder="amount_spend" min="1" value="{{ old('amount_spend') }}"
+    <div class="flex max-w-2xl">
+        <div class="flex-1 w-64 mr-2">
+            <label class="block text-custom-gray font-bold mt-3" for="amount_spend">Amount<label>
+            <input type="number" placeholder="Amount" min="1" value="{{ old('amount_spend') }}"
                 name="amount_spend" required  class="mt-2 w-full p-2 rounded border border-custom-green focus:outline-none focus:border-blue-600 font-normal">
                 @if ($errors->has('amount_spend'))
                     <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('amount_spend') }}</span>
                 @endif
+        </div>
+        <div class="flex-1 w-32 ml-2">
+            <label class="block text-custom-gray font-bold mt-3" for="currency">Currency<label>
+            <select name="currency" required class="mt-2 w-full p-2 rounded border border-custom-green focus:outline-none focus:border-blue-600 font-normal">
+                <option value="USD" {{ old('currency') == 'USD' ? 'selected' : '' }}>USD</option>
+                <option value="ZAR" {{ old('currency') == 'ZAR' ? 'selected' : '' }}>ZAR</option>
+                <option value="ZMW" {{ old('currency') == 'ZMW' ? 'selected' : '' }}>ZMW</option>
+            </select>
+            @if ($errors->has('currency'))
+                <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('currency') }}</span>
+            @endif
+        </div>
     </div>
     <div id="con">
     <div class="max-w-2xl" id="sub">

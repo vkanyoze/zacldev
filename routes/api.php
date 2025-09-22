@@ -25,6 +25,11 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
 
+// Firebase Authentication routes
+Route::post('/firebase/verify-token', [\App\Http\Controllers\FirebaseAuthController::class, 'verifyToken']);
+Route::post('/firebase/webhook', [\App\Http\Controllers\FirebaseAuthController::class, 'webhook']);
+Route::get('/firebase/config', [\App\Http\Controllers\FirebaseAuthController::class, 'getConfig']);
+
 // Protected routes (authentication required)
 Route::middleware('auth:sanctum')->group(function () {
     // Authentication

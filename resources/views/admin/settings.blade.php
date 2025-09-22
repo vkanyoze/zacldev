@@ -153,6 +153,92 @@
             </div>
         </div>
 
+        <!-- Password Policy Settings -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-custom-gray mb-2">Password Policy</h2>
+                <p class="text-gray-600">Configure password requirements for user accounts.</p>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Enable Password Policy</h3>
+                        <p class="text-sm text-gray-600">Enforce password requirements for all user accounts.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="password_policy_enabled" value="1" {{ old('password_policy_enabled', $passwordPolicy->enabled) ? 'checked' : '' }}
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-custom-green rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-green"></div>
+                    </label>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="password_policy_min_length" class="block text-sm font-medium text-gray-700 mb-2">Minimum Length</label>
+                        <input type="number" id="password_policy_min_length" name="password_policy_min_length" 
+                               value="{{ old('password_policy_min_length', $passwordPolicy->min_length) }}"
+                               min="4" max="50" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-green focus:border-custom-green transition duration-300">
+                        @error('password_policy_min_length')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <h4 class="text-lg font-medium text-gray-900">Password Requirements</h4>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h5 class="text-md font-medium text-gray-900">Require Uppercase Letters</h5>
+                            <p class="text-sm text-gray-600">Password must contain at least one uppercase letter (A-Z).</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="password_policy_require_uppercase" value="1" {{ old('password_policy_require_uppercase', $passwordPolicy->require_uppercase) ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-custom-green rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-green"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h5 class="text-md font-medium text-gray-900">Require Lowercase Letters</h5>
+                            <p class="text-sm text-gray-600">Password must contain at least one lowercase letter (a-z).</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="password_policy_require_lowercase" value="1" {{ old('password_policy_require_lowercase', $passwordPolicy->require_lowercase) ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-custom-green rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-green"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h5 class="text-md font-medium text-gray-900">Require Numbers</h5>
+                            <p class="text-sm text-gray-600">Password must contain at least one number (0-9).</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="password_policy_require_numbers" value="1" {{ old('password_policy_require_numbers', $passwordPolicy->require_numbers) ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-custom-green rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-green"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <h5 class="text-md font-medium text-gray-900">Require Special Characters</h5>
+                            <p class="text-sm text-gray-600">Password must contain at least one special character (!@#$%^&*).</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="password_policy_require_special_characters" value="1" {{ old('password_policy_require_special_characters', $passwordPolicy->require_special_characters) ? 'checked' : '' }}
+                                   class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-custom-green rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-green"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Notification Settings -->
         <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
             <div class="mb-6">

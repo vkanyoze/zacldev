@@ -28,6 +28,15 @@
                         <label class="mt-1.5 bg-gray-300 hover:bg-gray-400 rounded px-2 py-1 text-sm text-gray-600 cursor-pointer js-password-label " for="toggle">show</label>
                     </div> <input id="password" name="password" type="password" autocomplete="off" placeholder="password" class="js-password mt-2 w-full p-3 rounded border {{ $errors->has('password') ? 'border-red-600' : 'border-custom-green' }} focus:outline-none focus:border-blue-600 font-normal">
                 </div>
+                
+                <!-- Password Requirements -->
+                <div id="passwordRequirements" class="mt-2 text-sm text-gray-600 hidden">
+                    <p class="font-medium mb-1">Password must contain:</p>
+                    <ul id="requirementsList" class="space-y-1">
+                        <!-- Requirements will be populated by JavaScript -->
+                    </ul>
+                </div>
+                
                 @if ($errors->has('password'))
                 <span class="text-xs tracking-wide text-red-600 font-normal">{{ $errors->first('password') }}</span>
                 @endif
@@ -43,6 +52,9 @@
 </div>
 @include('footer')
 <script>
+    // Password policy configuration
+    const passwordPolicy = @json(\App\Services\PasswordPolicyService::getSettings());
+    
     const passwordToggle = document.querySelector('.js-password-toggle')
     passwordToggle.addEventListener('change', function() {
         const password = document.querySelector('.js-password'),
@@ -58,5 +70,71 @@
 
         password.focus()
     })
+    
+    function validatePassword(password) {
+        const errors = [];
+        
+        if (passwordPolicy.enabled) {
+            if (password.length < passwordPolicy.min_length) {
+                errors.push(`At least ${passwordPolicy.min_length} characters`);
+            }
+            
+            if (passwordPolicy.require_uppercase && !/[A-Z]/.test(password)) {
+                errors.push('One uppercase letter (A-Z)');
+            }
+            
+            if (passwordPolicy.require_lowercase && !/[a-z]/.test(password)) {
+                errors.push('One lowercase letter (a-z)');
+            }
+            
+            if (passwordPolicy.require_numbers && !/[0-9]/.test(password)) {
+                errors.push('One number (0-9)');
+            }
+            
+            if (passwordPolicy.require_special_characters && !/[^A-Za-z0-9]/.test(password)) {
+                errors.push('One special character (!@#$%^&*)');
+            }
+        }
+        
+        return errors;
+    }
+    
+    function updatePasswordRequirements() {
+        const password = document.querySelector('.js-password').value;
+        const requirementsDiv = document.getElementById('passwordRequirements');
+        const requirementsList = document.getElementById('requirementsList');
+        
+        if (passwordPolicy.enabled && password.length > 0) {
+            const errors = validatePassword(password);
+            
+            if (errors.length > 0) {
+                requirementsDiv.classList.remove('hidden');
+                requirementsList.innerHTML = errors.map(error => 
+                    `<li class="text-red-600"><i class="fas fa-times mr-1"></i>${error}</li>`
+                ).join('');
+            } else {
+                requirementsDiv.classList.add('hidden');
+            }
+        } else {
+            requirementsDiv.classList.add('hidden');
+        }
+    }
+    
+    // Add event listener for password input
+    document.querySelector('.js-password').addEventListener('input', updatePasswordRequirements);
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password = document.querySelector('.js-password').value;
+        
+        if (passwordPolicy.enabled) {
+            const errors = validatePassword(password);
+            if (errors.length > 0) {
+                e.preventDefault();
+                alert('Password does not meet the requirements:\n\n' + errors.join('\n'));
+                return false;
+            }
+        }
+    });
 </script>
 @endsection

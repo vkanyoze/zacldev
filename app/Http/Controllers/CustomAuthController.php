@@ -117,7 +117,19 @@ class CustomAuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             \Log::info('Authentication successful', ['user_id' => Auth::id()]);
-            return redirect()->route('dashboards')->withSuccess('Signed in');
+            
+            // Check if 2FA is enabled
+            if (config('2fa.enabled', false)) {
+                // Clear any existing 2FA session
+                session()->forget(['2fa_verified', '2fa_verified_at']);
+                // Redirect to 2FA verification
+                return redirect()->route('2fa.verify');
+            } else {
+                // 2FA is disabled, set as verified and go to dashboard
+                session()->put('2fa_verified', true);
+                session()->put('2fa_verified_at', now());
+                return redirect()->route('dashboards')->withSuccess('Signed in successfully');
+            }
         }
   
         \Log::warning('Authentication failed', ['email' => $request->email]);
@@ -133,19 +145,52 @@ class CustomAuthController extends Controller
       
     public function customRegistration(Request $request)
     {  
+        // Get password policy settings
+        $passwordPolicy = \App\Services\PasswordPolicyService::getSettings();
+        
+        // Build validation rules based on password policy
+        $passwordRules = ['required', 'string'];
+        
+        if ($passwordPolicy->enabled) {
+            $passwordRules[] = 'min:' . $passwordPolicy->min_length;
+            
+            if ($passwordPolicy->require_uppercase) {
+                $passwordRules[] = 'regex:/[A-Z]/';
+            }
+            
+            if ($passwordPolicy->require_lowercase) {
+                $passwordRules[] = 'regex:/[a-z]/';
+            }
+            
+            if ($passwordPolicy->require_numbers) {
+                $passwordRules[] = 'regex:/[0-9]/';
+            }
+            
+            if ($passwordPolicy->require_special_characters) {
+                $passwordRules[] = 'regex:/[^A-Za-z0-9]/';
+            }
+        } else {
+            // Default validation if policy is disabled
+            $passwordRules[] = Password::min(8)
+                ->letters()
+                ->mixedCase()
+                ->numbers()
+                ->symbols()
+                ->uncompromised();
+        }
+        
         $request->validate([
             'email' => 'required|email|unique:users',
-            'password' => [
-                'required', 
-                'string', 
-                Password::min(8)
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised()
-            ],
+            'password' => $passwordRules,
         ]);
+        
+        // Additional server-side password policy validation
+        if ($passwordPolicy->enabled) {
+            $validation = \App\Services\PasswordPolicyService::validatePassword($request->password);
+            if (!$validation['valid']) {
+                return back()->withErrors(['password' => $validation['errors']])->withInput();
+            }
+        }
            
         $data = $request->all();
         $createUser = $this->create($data);
@@ -282,15 +327,51 @@ class CustomAuthController extends Controller
 
     public function submitResetPasswordForm(Request $request)
       {
-        $validator =  Validator::make($request->all(),[
+        // Get password policy settings
+        $passwordPolicy = \App\Services\PasswordPolicyService::getSettings();
+        
+        // Build validation rules based on password policy
+        $passwordRules = ['required', 'string'];
+        
+        if ($passwordPolicy->enabled) {
+            $passwordRules[] = 'min:' . $passwordPolicy->min_length;
+            
+            if ($passwordPolicy->require_uppercase) {
+                $passwordRules[] = 'regex:/[A-Z]/';
+            }
+            
+            if ($passwordPolicy->require_lowercase) {
+                $passwordRules[] = 'regex:/[a-z]/';
+            }
+            
+            if ($passwordPolicy->require_numbers) {
+                $passwordRules[] = 'regex:/[0-9]/';
+            }
+            
+            if ($passwordPolicy->require_special_characters) {
+                $passwordRules[] = 'regex:/[^A-Za-z0-9]/';
+            }
+        } else {
+            $passwordRules[] = 'min:6';
+        }
+        
+        $validator = Validator::make($request->all(),[
             'email' => 'required|email|exists:users',
-            'password' => 'required|string|min:6',
+            'password' => $passwordRules,
         ]);
 
         if ($validator->fails()) {  
                 return back()
                     ->withErrors($validator)
                     ->withInput();
+        }
+        
+        // Additional server-side password policy validation
+        if ($passwordPolicy->enabled) {
+            $validation = \App\Services\PasswordPolicyService::validatePassword($request->password);
+            if (!$validation['valid']) {
+                return back()->withErrors(['password' => $validation['errors']])->withInput();
+            }
         }
 
         $data = $request->all();

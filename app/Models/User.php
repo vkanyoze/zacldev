@@ -25,7 +25,12 @@ class User extends Authenticatable  implements Auditable
         'name',
         'email',
         'password',
-        'is_email_verified'
+        'is_email_verified',
+        'google_id',
+        'facebook_id',
+        'firebase_uid',
+        'firebase_provider',
+        'avatar'
     ];
 
     /**
@@ -60,5 +65,10 @@ class User extends Authenticatable  implements Auditable
     public function webhooks()
     {
         return $this->hasMany(Webhook::class);
+    }
+
+    public function twoFactorAuths()
+    {
+        return $this->hasMany(TwoFactorAuth::class);
     }
 }

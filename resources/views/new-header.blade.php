@@ -48,9 +48,6 @@
                 <a href="{{ route('payments.index') }}" class="block">Payments</a>
             </li>
             <li class="px-6 py-4 hover:bg-gray-700">
-                <a href="{{ route('cards.index') }}" class="block">Cards</a>
-            </li>
-            <li class="px-6 py-4 hover:bg-gray-700">
                 <a  href="{{ route('user.update') }}" class="block">Email Address</a>
             </li>
             <li class="px-6 py-4 hover:bg-gray-700">
